@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { state, dayKey, librarySize, shade } from '../store.js';
-import { MODES } from '../lib/session.js';
+import { modesTitle } from '../lib/session.js';
 import LineChart from '../components/LineChart.vue';
 
 const DAY = 86400000;
@@ -52,7 +52,8 @@ const totals = computed(() => {
 const byDay = computed(() => keys.value.slice().reverse().slice(0, 60).map((key) => ({ key, date: short(noon(key)), ...state.days[key] })));
 const shownSessions = ref(30);
 const sessions = computed(() => state.sessions.slice().reverse());
-const modeTitle = (id) => MODES.find((mode) => mode.id === id)?.title || id;
+// A session from before the kinds could be ticked has one "mode"; "mixed" was all of them.
+const kindsOf = (session) => session.modes || (session.mode && session.mode !== 'mixed' ? [session.mode] : null);
 </script>
 
 <template>
@@ -98,7 +99,7 @@ const modeTitle = (id) => MODES.find((mode) => mode.id === id)?.title || id;
         <li v-for="(session, i) in sessions.slice(0, shownSessions)" :key="i" class="log-row" :style="{ '--shade': shade(session.ok / session.n) }">
           <span class="word-main">
             <span class="w-pt">{{ session.title }}</span>
-            <span class="w-en">{{ long(session.t) }} · {{ modeTitle(session.mode) }}</span>
+            <span class="w-en">{{ long(session.t) }} · {{ modesTitle(kindsOf(session)) }}</span>
           </span>
           <span class="log-score">{{ session.ok }}/{{ session.n }}</span>
           <span class="score">{{ Math.round(session.ok / session.n * 100) }}%</span>

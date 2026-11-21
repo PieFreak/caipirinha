@@ -79,7 +79,7 @@ function commit() {
   if (q.gen) recordGen(q.gen, v.ok); else record(q.id, v.ok);
   if (!q.retry) {
     firstTries.push({ id: q.id || null, pt: q.pt, en: q.en, ok: v.ok });
-    if (!v.ok) queue.push(again(q, session));
+    if (!v.ok) queue.push(again(q, session.set));
   }
 }
 
@@ -97,9 +97,9 @@ function finish() {
   stopSpeaking();
   const n = firstTries.length;
   const ok = firstTries.filter((t) => t.ok).length;
-  if (n) logSession({ set: session.setId, title: session.title, mode: session.mode, dir: session.dir, n, ok });
+  if (n) logSession({ set: session.setId, title: session.title, modes: session.modes, dir: session.dir, n, ok });
   play.result = {
-    setId: session.setId, title: session.title, mode: session.mode, dir: session.dir, length: session.length,
+    setId: session.setId, title: session.title, modes: session.modes, dir: session.dir, length: session.length,
     n, ok, tries: firstTries,
   };
   play.session = null;

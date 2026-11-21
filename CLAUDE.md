@@ -19,6 +19,8 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   correct it, and a second try that is still a typo counts as right. Typing another real word ("ela" for "ele")
   is a mistake, not a typo.
 - **On a computer**, keys 1 to 4 pick a choice and Enter moves on.
+- **Kinds of exercise are ticked**, any number of the four, all of them by default (there is no "Mixed" choice).
+  Each question is one of the ticked kinds that can ask it; the ticks are remembered.
 - Not built, because they break the rules above: an AI conversation partner, reminders sent by the app.
 
 ## Where it lives

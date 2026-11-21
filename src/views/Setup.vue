@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { getSet, setStats, shade, state, save } from '../store.js';
 import { buildSession, modesFor, DIRS, LENGTHS, MODES } from '../lib/session.js';
 import { play } from '../lib/play.js';
+import Checks from '../components/Checks.vue';
 import Chips from '../components/Chips.vue';
 import Icon from '../components/Icon.vue';
 import WordRow from '../components/WordRow.vue';
@@ -16,28 +17,37 @@ const stats = computed(() => (set.value ? setStats(set.value) : null));
 const empty = computed(() => !set.value || (set.value.kind === 'list' && !set.value.ids.length));
 const allowed = computed(() => (empty.value ? {} : modesFor(set.value)));
 
-// The last choices are remembered; a way of practising this set cannot offer falls back to Mixed.
-const mode = ref(state.settings.mode);
+// The kinds of exercise ticked last time are remembered (all of them at first).
+// One this set cannot offer is shown unticked here, and stays ticked for other sets.
+const ticked = ref(state.settings.modes.slice());
 const dir = ref(state.settings.dir);
 const length = ref(state.settings.length);
-if (!empty.value && !allowed.value[mode.value]) mode.value = 'mixed';
 
-const modes = computed(() => MODES.map((m) => ({ ...m, disabled: !allowed.value[m.id] })));
-const about = computed(() => MODES.find((m) => m.id === mode.value).about);
-const dirs = computed(() => DIRS.map((d) => ({ ...d, disabled: mode.value === 'order' && d.id !== 'en-pt' })));
+const WHY = { order: 'nothing here is a sentence', listen: 'this device cannot read aloud' };
+const kinds = computed(() => MODES.map((m) => ({ ...m, disabled: !allowed.value[m.id], why: allowed.value[m.id] ? '' : WHY[m.id] })));
+const chosen = computed(() => MODES.map((m) => m.id).filter((id) => ticked.value.includes(id) && allowed.value[id]));
+const onlyOrder = computed(() => chosen.value.length === 1 && chosen.value[0] === 'order');
+const hint = computed(() => {
+  const missing = kinds.value.filter((kind) => kind.disabled).map((kind) => `${kind.title}: ${kind.why}.`);
+  const lead = chosen.value.length ? 'Each question is one of the kinds you ticked.' : 'Tick at least one kind of exercise.';
+  return [lead, ...missing].join(' ');
+});
+
+// Word order always goes from English to Portuguese.
+const dirs = computed(() => DIRS.map((d) => ({ ...d, disabled: onlyOrder.value && d.id !== 'en-pt' })));
 const shownDir = computed({
-  get: () => (mode.value === 'order' ? 'en-pt' : dir.value),
+  get: () => (onlyOrder.value ? 'en-pt' : dir.value),
   set: (value) => { dir.value = value; },
 });
 const shownWords = computed(() => (set.value.kind === 'list' ? set.value.ids.slice(0, 120) : []));
 const problem = ref('');
 
 function start() {
-  Object.assign(state.settings, { mode: mode.value, dir: dir.value, length: length.value });
+  Object.assign(state.settings, { modes: ticked.value.slice(), dir: dir.value, length: length.value });
   save();
-  const session = buildSession(props.id, { mode: mode.value, dir: shownDir.value, length: length.value });
+  const session = buildSession(props.id, { modes: chosen.value, dir: shownDir.value, length: length.value });
   if (!session) {
-    problem.value = 'Nothing here fits that way of practising. Try Mixed.';
+    problem.value = 'Nothing here fits the kinds of exercise you ticked. Tick another.';
     return;
   }
   play.session = { ...session, length: length.value };
@@ -66,9 +76,9 @@ function start() {
     </div>
 
     <section class="tight">
-      <h2>How</h2>
-      <Chips v-model="mode" :options="modes" label="How to practise" />
-      <p class="hint">{{ about }}</p>
+      <h2>Exercises</h2>
+      <Checks v-model="ticked" :options="kinds" label="Kinds of exercise" />
+      <p class="hint" :class="{ bad: !chosen.length }">{{ hint }}</p>
     </section>
 
     <section class="tight">
@@ -82,7 +92,7 @@ function start() {
     </section>
 
     <p v-if="problem" class="hint bad">{{ problem }}</p>
-    <button type="button" class="btn primary wide" @click="start">Start</button>
+    <button type="button" class="btn primary wide" :disabled="!chosen.length" @click="start">Start</button>
 
     <section v-if="shownWords.length">
       <h2>Words</h2>

@@ -14,20 +14,29 @@ const fresh = () => ({
   own: {},       // id → { id, pt, en, note } for words the user added
   daily: { date: '', ids: [] },
   days: {},      // 'YYYY-MM-DD' → { n, ok, added }
-  sessions: [],  // newest last: { t, set, title, mode, dir, n, ok }
+  sessions: [],  // newest last: { t, set, title, modes, dir, n, ok }
   gen: {},       // generated sets (counting, clock) → { n, ok, recent }
   settings: {
     perDay: 5, source: 'course', strictAccents: false, autoSpeak: true, voice: '', rate: 0.9,
-    mode: 'mixed', dir: 'both', length: 10,
+    modes: ['choose', 'type', 'listen', 'order'], dir: 'both', length: 10,
   },
 });
+
+// Settings read from the phone or from a backup, on top of today's defaults. An earlier
+// version kept one way of practising ("mode"): it becomes the kinds of exercise ticked.
+function settingsOf(stored = {}) {
+  const { mode, ...kept } = stored;
+  const settings = { ...fresh().settings, ...kept };
+  if (!Array.isArray(kept.modes)) settings.modes = !mode || mode === 'mixed' ? fresh().settings.modes : [mode];
+  return settings;
+}
 
 function load() {
   const base = fresh();
   try {
     const stored = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (stored && typeof stored === 'object') {
-      return { ...base, ...stored, settings: { ...base.settings, ...(stored.settings || {}) } };
+      return { ...base, ...stored, settings: settingsOf(stored.settings) };
     }
   } catch {
     // Unreadable storage: start empty instead of failing to open.
@@ -267,7 +276,7 @@ export function importData(text) {
     return { error: 'That file is not a backup of this app.' };
   }
   const base = fresh();
-  Object.assign(state, base, stored, { settings: { ...base.settings, ...(stored.settings || {}) } });
+  Object.assign(state, base, stored, { settings: settingsOf(stored.settings) });
   save();
   return { words: Object.keys(state.words).length };
 }

@@ -1,5 +1,6 @@
 // Building the questions of a session, and judging an answer. A session is a list
-// of questions; each has what is asked, how (mode) and which way (dir).
+// of questions; each has what is asked, how (mode: one of the kinds the learner
+// ticked) and which way (dir).
 import { items } from '../content/index.js';
 import { getItem, getSet, state } from '../store.js';
 import { alternatives, checkDigits, checkEn, checkPt, clean, cleanEn, shownEn, stripAccents, tilesOf } from './text.js';
@@ -7,13 +8,21 @@ import { formatNumber, numberAnswers, toWords, NUMBER_WORDS } from './numbers.js
 import { formatTime, timeWords } from './clock.js';
 import { speech } from './speech.js';
 
+// The kinds of exercise. The learner ticks the ones wanted; all of them is the default.
 export const MODES = [
-  { id: 'mixed', title: 'Mixed', about: 'A different kind of question each time.' },
-  { id: 'choose', title: 'Pick from 4', about: 'Choose the right one of four.' },
-  { id: 'type', title: 'Typing', about: 'Write the answer yourself.' },
-  { id: 'listen', title: 'Listen and pick', about: 'Hear it, then choose.' },
-  { id: 'order', title: 'Word order', about: 'Put the words of a sentence in order.' },
+  { id: 'choose', title: 'Pick from 4', short: 'Pick' },
+  { id: 'type', title: 'Typing', short: 'Typing' },
+  { id: 'listen', title: 'Listen and pick', short: 'Listen' },
+  { id: 'order', title: 'Word order', short: 'Word order' },
 ];
+export const ALL_MODES = MODES.map((mode) => mode.id);
+
+// What a session was made of, in a few words: for the log.
+export function modesTitle(modes) {
+  const wanted = MODES.filter((mode) => (modes || ALL_MODES).includes(mode.id));
+  if (wanted.length === 1) return wanted[0].title;
+  return wanted.length === MODES.length || !wanted.length ? 'Mixed' : wanted.map((mode) => mode.short).join(' + ');
+}
 
 export const DIRS = [
   { id: 'both', title: 'Both ways' },
@@ -80,13 +89,15 @@ function randomNumber(min, max) {
   return n;
 }
 
-function generate(set, count) {
+// wanted: an entry is kept only when one of the ticked kinds can ask it.
+function generate(set, count, wanted = () => true) {
   const seen = new Set();
   const out = [];
   for (let tries = 0; out.length < count && tries < count * 40; tries++) {
     let entry;
     if (set.gen === 'clock') entry = ofTime(1 + rand(12), rand(12) * 5, set.id);
     else entry = ofNumber(randomNumber(set.min, set.max), set.id);
+    if (!wanted(entry)) continue;
     if (seen.has(entry.value)) continue;
     seen.add(entry.value);
     out.push(entry);
@@ -174,23 +185,24 @@ function scrambled(tiles) {
 
 // ---- a session
 
+// Which kinds a set can offer at all: word order needs sentences, listening needs a voice.
 export function modesFor(set) {
   const sample = set.kind === 'gen' ? generate(set, 6) : set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem);
   return {
-    mixed: true, choose: true, type: true,
+    choose: true, type: true,
     listen: speech.supported,
     order: sample.some(canOrder),
   };
 }
 
-function prepare(entry, mode, dir, set) {
-  let kind = mode;
-  if (mode === 'mixed') {
-    const kinds = ['choose', 'type'];
-    if (speech.supported) kinds.push('listen');
-    if (canOrder(entry)) kinds.push('order');
-    kind = kinds[rand(kinds.length)];
-  }
+// The ticked kinds that can ask this entry.
+const kindsFor = (entry, modes) => modes.filter((kind) => (
+  kind === 'order' ? canOrder(entry) : kind === 'listen' ? speech.supported : true
+));
+
+function prepare(entry, modes, dir, set) {
+  const kinds = kindsFor(entry, modes);
+  const kind = kinds[rand(kinds.length)];
   let way = dir === 'both' ? (rand(2) ? 'pt-en' : 'en-pt') : dir;
   if (kind === 'order') way = 'en-pt';
   const question = { ...entry, mode: kind, dir: way };
@@ -200,16 +212,18 @@ function prepare(entry, mode, dir, set) {
 }
 
 // "only" narrows a word list to those words: the ones missed in the session before.
-export function buildSession(setId, { mode, dir, length }, only) {
+// modes: the kinds of exercise ticked. Each question is one of them, chosen at random
+// among those that can ask it; a word none of them can ask is left out.
+export function buildSession(setId, { modes, dir, length }, only) {
   const found = getSet(setId);
-  if (!found) return null;
+  if (!found || !modes?.length) return null;
   const set = only && found.kind === 'list' ? { ...found, ids: only, ordered: false } : found;
+  const askable = (entry) => kindsFor(entry, modes).length > 0;
   let entries;
   if (set.kind === 'gen') {
-    entries = generate(set, length || 20);
+    entries = generate(set, length || 20, askable);
   } else {
-    let pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem);
-    if (mode === 'order') pool = pool.filter(canOrder);
+    let pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem).filter(askable);
     if (!set.ordered) pool = shuffle(pool);
     entries = length ? pool.slice(0, length) : pool;
     // The weakest or oldest words are chosen in order, then asked in any order.
@@ -217,15 +231,15 @@ export function buildSession(setId, { mode, dir, length }, only) {
   }
   if (!entries.length) return null;
   return {
-    setId, title: set.title, mode, dir, set,
-    queue: entries.map((entry) => prepare(entry, mode, dir, set)),
+    setId, title: set.title, modes, dir, set,
+    queue: entries.map((entry) => prepare(entry, modes, dir, set)),
   };
 }
 
-// A wrong answer comes back once at the end, asked afresh.
-export function again(question, session) {
+// A wrong answer comes back once at the end: the same kind of question, asked afresh.
+export function again(question, set) {
   const { mode, dir, options, bank, retry, ...entry } = question;
-  return { ...prepare(entry, session.mode === 'mixed' ? mode : session.mode, dir, session.set), retry: true };
+  return { ...prepare(entry, [mode], dir, set), retry: true };
 }
 
 // ---- judging

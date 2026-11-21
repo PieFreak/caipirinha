@@ -14,7 +14,7 @@ const share = computed(() => (result && result.n ? result.ok / result.n : 0));
 const missed = computed(() => (result ? result.tries.filter((t) => !t.ok && t.id).map((t) => t.id) : []));
 
 function start(ids) {
-  const session = buildSession(result.setId, { mode: result.mode, dir: result.dir, length: ids ? 0 : result.length }, ids);
+  const session = buildSession(result.setId, { modes: result.modes, dir: result.dir, length: ids ? 0 : result.length }, ids);
   if (!session) return;
   play.session = { ...session, length: result.length };
   router.replace('/play');
