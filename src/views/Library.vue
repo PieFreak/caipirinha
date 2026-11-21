@@ -44,7 +44,10 @@ const visible = computed(() => ids.value.slice(0, shown.value));
       <h1>Library</h1>
       <p class="sub">{{ librarySize }} {{ librarySize === 1 ? 'word' : 'words' }}</p>
     </div>
-    <router-link to="/add" class="btn small"><Icon name="plus" :size="18" /> Add a word</router-link>
+    <div class="top-actions">
+      <router-link to="/add" class="btn small"><Icon name="plus" :size="18" /> Add a word</router-link>
+      <router-link to="/settings" class="icon-btn" aria-label="Settings"><Icon name="settings" /></router-link>
+    </div>
   </header>
 
   <div v-if="!librarySize" class="cheer">

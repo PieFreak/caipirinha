@@ -65,7 +65,7 @@ function take(entry) {
       <ul class="list">
         <li v-for="match in matches" :key="match.entry.id" class="found-row" :class="{ same: match.same }">
           <span class="word-main">
-            <span class="w-pt">{{ match.entry.pt }}</span>
+            <span class="w-pt" lang="pt-BR">{{ match.entry.pt }}</span>
             <span class="w-en">{{ shownEn(match.entry.en) }}</span>
           </span>
           <router-link v-if="inLibrary(match.entry)" :to="{ name: 'word', params: { id: match.entry.id } }" class="tag in">
@@ -90,7 +90,7 @@ function take(entry) {
         <ul class="list">
           <li v-for="match in meanings" :key="match.entry.id" class="found-row">
             <span class="word-main">
-              <span class="w-pt">{{ match.entry.pt }}</span>
+              <span class="w-pt" lang="pt-BR">{{ match.entry.pt }}</span>
               <span class="w-en">{{ shownEn(match.entry.en) }}</span>
             </span>
             <router-link v-if="inLibrary(match.entry)" :to="{ name: 'word', params: { id: match.entry.id } }" class="tag in">
@@ -117,7 +117,7 @@ function take(entry) {
     <ul class="list">
       <li v-for="item in added" :key="item.id" class="try good">
         <Icon name="check" :size="18" />
-        <span class="word-main"><span class="w-pt">{{ item.pt }}</span><span class="w-en">{{ shownEn(item.en) }}</span></span>
+        <span class="word-main"><span class="w-pt" lang="pt-BR">{{ item.pt }}</span><span class="w-en">{{ shownEn(item.en) }}</span></span>
       </li>
     </ul>
   </section>

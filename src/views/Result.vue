@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { play } from '../lib/play.js';
+import { play, startSession } from '../lib/play.js';
 import { buildSession, ALL } from '../lib/session.js';
 import { shade } from '../store.js';
 import Icon from '../components/Icon.vue';
@@ -23,7 +23,7 @@ const missed = computed(() => (result ? [...new Set(result.tries.filter((t) => !
 function start(ids) {
   const session = buildSession(result.setId, { modes: result.modes, dir: result.dir, length: ids ? ALL : result.length }, ids);
   if (!session) return;
-  play.session = { ...session, length: result.length };
+  startSession({ ...session, length: result.length });
   router.replace('/play');
 }
 </script>
@@ -43,7 +43,8 @@ function start(ids) {
     <ul class="list">
       <li v-for="(t, i) in result.tries" :key="i" class="try" :class="t.ok ? 'good' : 'bad'">
         <Icon :name="t.ok ? 'check' : 'close'" :size="18" />
-        <span class="word-main"><span class="w-pt">{{ t.pt }}</span><span class="w-en">{{ t.en }}</span></span>
+        <span class="sr-only">{{ t.ok ? 'Right:' : 'Wrong:' }}</span>
+        <span class="word-main"><span class="w-pt" lang="pt-BR">{{ t.pt }}</span><span class="w-en">{{ t.en }}</span></span>
       </li>
     </ul>
 

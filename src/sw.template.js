@@ -5,7 +5,9 @@ const FILES = __FILES__;
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(FILES))
+      // Straight from the server, past the browser's own cache: a copy made minutes after a
+      // deploy must not mix the new files with an old index.html.
+      .then((cache) => cache.addAll(FILES.map((file) => new Request(new URL(file, self.location.href), { cache: 'reload' }))))
       .then(() => self.skipWaiting()),
   );
 });

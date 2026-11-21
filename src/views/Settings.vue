@@ -1,7 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { state, save, exportData, importData, resetAll, ensureDaily, librarySize } from '../store.js';
+import {
+  state, save, exportData, readBackup, applyBackup, undoRestore, canUndoRestore, resetAll, ensureDaily, librarySize,
+} from '../store.js';
 import { speech, speak, chosenVoice } from '../lib/speech.js';
 import { isBrazilian, isRobotic } from '../lib/voices.js';
 import Chips from '../components/Chips.vue';
@@ -54,13 +56,33 @@ async function backup() {
   message.value = `Saved as ${name}.`;
 }
 
+// Restoring: the file is read first and nothing changes until the learner confirms.
+// What was on the device is kept aside, so the restore can be undone.
+const pending = ref(null);
+const undoable = ref(canUndoRestore());
+const longDate = (time) => new Intl.DateTimeFormat('en', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(time));
+
 async function restore(event) {
   const file = event.target.files[0];
   event.target.value = '';
   if (!file) return;
-  const result = importData(await file.text());
-  message.value = result.error || `Restored: ${result.words} words in your library.`;
-  if (!result.error) ensureDaily();
+  const read = readBackup(await file.text());
+  if (read.error) { message.value = read.error; pending.value = null; return; }
+  message.value = '';
+  pending.value = read;
+}
+
+function confirmRestore() {
+  applyBackup(pending.value.state);
+  message.value = `Restored: ${pending.value.words} words in your library.`;
+  pending.value = null;
+  undoable.value = true;
+  ensureDaily();
+}
+
+function undo() {
+  if (undoRestore()) message.value = 'The restore is undone: everything is as it was before it.';
+  undoable.value = false;
 }
 
 const erasing = ref(false);
@@ -135,7 +157,20 @@ function erase() {
       <button type="button" class="btn" @click="picker.click()">Restore</button>
       <input ref="picker" type="file" accept="application/json,.json" hidden @change="restore">
     </div>
+    <div v-if="pending" class="confirm" role="alertdialog" aria-labelledby="restore-title">
+      <p id="restore-title"><b>Replace what is on this device?</b></p>
+      <p>
+        This backup has {{ pending.words }} {{ pending.words === 1 ? 'word' : 'words' }} and {{ pending.sessions }}
+        {{ pending.sessions === 1 ? 'session' : 'sessions' }}<template v-if="pending.exported">, saved {{ longDate(pending.exported) }}</template>.
+        This device has {{ librarySize }} {{ librarySize === 1 ? 'word' : 'words' }} now. You can undo it afterwards.
+      </p>
+      <div class="row">
+        <button type="button" class="btn danger" @click="confirmRestore">Replace</button>
+        <button type="button" class="btn" @click="pending = null">Cancel</button>
+      </div>
+    </div>
     <p v-if="message" class="hint" role="status">{{ message }}</p>
+    <button v-if="undoable && !pending" type="button" class="link" @click="undo">Undo the last restore</button>
   </section>
 
   <section class="tight">

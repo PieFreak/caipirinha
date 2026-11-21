@@ -98,3 +98,42 @@ test('each question is one of the kinds ticked', () => {
   assert.ok(ordered.every((q) => q.mode === 'order' && q.dir === 'en-pt' && q.tiles.length >= 3));
   assert.equal(new Set(ordered.map((q) => q.id)).size, sentences);
 });
+
+test('verb questions: a person and a verb, the right form to pick or type', async () => {
+  const { judge } = await import('../src/lib/session.js');
+  for (const setId of ['verbs-present', 'verbs-present-irregular', 'verbs-past', 'verbs-past-irregular']) {
+    const session = buildSession(setId, { modes: ['choose', 'type', 'listen', 'order'], dir: 'both', length: 40 });
+    assert.equal(session.queue.length, 40, setId);
+    for (const question of session.queue) {
+      assert.ok(question.verb, setId);
+      assert.ok(['choose', 'type'].includes(question.mode), 'never listened to or put in order');
+      if (question.mode === 'choose') {
+        assert.equal(question.options.length, 4);
+        assert.equal(question.options.filter((option) => option.correct).length, 1);
+        assert.equal(new Set(question.options.map((option) => option.text)).size, 4, 'four different forms');
+      } else {
+        assert.equal(judge(question, question.form).ok, true, `${question.pt}`);
+        assert.equal(judge(question, question.pt).ok, true, 'with its pronoun');
+      }
+    }
+  }
+  assert.equal(buildSession('verbs-present', { modes: ['listen', 'order'], dir: 'both', length: 10 }), null);
+});
+
+test('typing a synonym is right: asked "hello", "oi" is as good as "olá"', async () => {
+  const { judge } = await import('../src/lib/session.js');
+  const asked = buildSession('greetings', { modes: ['type'], dir: 'en-pt', length: 0 }).queue.find((question) => question.id === 'olá');
+  assert.deepEqual(judge(asked, 'oi'), { ok: true, also: 'oi', accents: undefined });
+  assert.equal(judge(asked, 'tchau').ok, false);
+  const permanent = buildSession('top1', { modes: ['type'], dir: 'en-pt', length: 0 }).queue.find((question) => question.id === 'ser');
+  assert.equal(judge(permanent, 'estar').ok, false, '"to be (permanent)" does not accept estar');
+  assert.equal(judge(permanent, 'ser').ok, true);
+});
+
+test('clock times: "3" for three o\'clock; Counting to 100 always offers word order', async () => {
+  const { judge, modesFor } = await import('../src/lib/session.js');
+  const session = buildSession('clock', { modes: ['type'], dir: 'pt-en', length: 50 });
+  const onTheHour = session.queue.find((question) => question.en.endsWith(':00'));
+  if (onTheHour) assert.equal(judge(onTheHour, onTheHour.en.split(':')[0]).ok, true);
+  for (let i = 0; i < 200; i++) assert.equal(modesFor(getSet('count100')).order, true);
+});

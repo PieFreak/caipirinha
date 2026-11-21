@@ -10,29 +10,29 @@ export default [
 olá = hello ~ oh-LAH # Spoken: "oi" is what people actually say to each other.
 oi = hi / hello ~ oy
 bom dia = good morning ~ bong JEE-ah
-boa tarde = good afternoon ~ BOH-ah TAR-djee
+boa tarde = good afternoon ~ BOH-ah TAR-jee
 boa noite = good evening / good night ~ BOH-ah NOY-chee # Used both to greet and to say goodbye in the evening.
 tudo bem? = how are you? / all good? ~ TOO-doo bayng # Spoken: also "tudo bom?". The usual answer is the same words back: "tudo bem" or just "tudo".
 e aí? = what's up? ~ ee ah-EE # Informal, between friends.
 como vai? = how are you? / how's it going? ~ KOH-moo vy
-beleza = cool / all good ~ beh-LAY-zah # Informal: both a question ("beleza?") and its answer.
-prazer = nice to meet you ~ prah-ZEHR # Short for "prazer em conhecer você".
-muito prazer = very nice to meet you ~ MWEEN-too prah-ZEHR
+beleza (f) = cool / all good / okay / beauty ~ beh-LAY-zah # Informal: both a question ("beleza?") and its answer.
+prazer (m) = nice to meet you / pleasure ~ prah-ZEHR # Short for "prazer em conhecer você".
+muito prazer = very nice to meet you / pleased to meet you ~ MWEEN-too prah-ZEHR
 bem-vindo / bem-vinda = welcome ~ bayng-VEEN-doo / bayng-VEEN-dah # "bem-vindo" to a man, "bem-vinda" to a woman.
 tchau = bye ~ chow
-até logo = see you later ~ ah-TEH LAW-goo
+até logo = see you later / see you soon ~ ah-TEH LAW-goo
 até amanhã = see you tomorrow ~ ah-TEH ah-mahn-YAHNG
-até mais = see you ~ ah-TEH myss # Spoken: often just "até!".
+até mais = see you / see you later ~ ah-TEH myss # Spoken: often just "até!".
 obrigado / obrigada = thank you / thanks ~ oh-bree-GAH-doo / oh-bree-GAH-dah # A man says "obrigado", a woman says "obrigada". Spoken: often "brigado" or "brigada".
 muito obrigado / muito obrigada = thank you very much / thanks a lot ~ MWEEN-too oh-bree-GAH-doo
 valeu = thanks / cheers ~ vah-LEH-oo # Informal.
-de nada = you're welcome ~ djee NAH-dah # Also heard: "imagina" and "por nada".
+de nada = you're welcome ~ jee NAH-dah # Also heard: "imagina" and "por nada".
 por favor = please ~ poor fah-VOHR
 com licença = excuse me ~ kong lee-SEHN-sah # To get past someone or to get their attention.
-desculpa = sorry ~ djees-KOOW-pah # Spoken. "desculpe" is the more formal form.
+desculpa = sorry / I'm sorry ~ jees-KOOW-pah # Spoken. "desculpe" is the more formal form.
 sim = yes ~ seeng
 não = no / not ~ nowng
-bom fim de semana = have a good weekend ~ bong feeng djee seh-MAH-nah
+bom fim de semana = have a good weekend / have a nice weekend ~ bong feeng jee seh-MAH-nah
 `,
   },
   {
@@ -83,7 +83,7 @@ agora = now
 depois = later / after / afterwards
 antes = before
 cedo = early
-tarde = late # Also the noun "a tarde", the afternoon.
+tarde (f) = late / afternoon # Also the noun "a tarde", the afternoon.
 dia (m) = day
 semana (f) = week
 fim de semana (m) = weekend
@@ -126,6 +126,30 @@ a que horas? = at what time? / what time?
 meia hora = half an hour
 daqui a uma hora = in an hour
 estou atrasado / estou atrasada = I'm late # Spoken: "tô atrasado". A man says "atrasado", a woman "atrasada".
+`,
+  },
+  {
+    id: 'home',
+    title: 'Around the house',
+    section: 'Basics',
+    about: 'Things you find at home and in a hotel room.',
+    text: `
+geladeira (f) = refrigerator / fridge
+garfo (m) = fork
+colher (f) = spoon
+xícara (f) = cup (for coffee or tea) # A glass is "copo".
+espelho (m) = mirror
+sofá (m) = sofa / couch
+armário (m) = cupboard / wardrobe / closet
+gaveta (f) = drawer
+travesseiro (m) = pillow
+cobertor (m) = blanket
+lençol (m) = sheet (on a bed)
+sabonete (m) = soap # "sabão" is soap for washing clothes or dishes.
+tomada (f) = power outlet / socket
+carregador (m) = charger
+caneta (f) = pen
+mochila (f) = backpack
 `,
   },
 ];

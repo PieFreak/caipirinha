@@ -26,7 +26,13 @@ export function initSpeech() {
     window.speechSynthesis.speak(silent);
     refresh();
   };
-  window.addEventListener('pointerdown', unlock, { once: true });
+  let unlocked = false;
+  const once = () => {
+    if (unlocked) return;
+    unlocked = true;
+    unlock();
+  };
+  for (const type of ['touchend', 'click', 'keydown']) window.addEventListener(type, once, { once: true, passive: true });
 }
 
 // The voice the learner picked in Settings, or else the best one the device has.

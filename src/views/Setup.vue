@@ -2,9 +2,10 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { getSet, setStats, shade, state, save } from '../store.js';
-import { buildSession, modesFor, poolSize, DIRS, MODES } from '../lib/session.js';
+import { buildCards, buildSession, modesFor, poolSize, DIRS, MODES } from '../lib/session.js';
+import { PERSONS, VERB_GROUPS, verbsOf } from '../lib/verbs.js';
 import { COUNTS, questionsFor, sharesFor } from '../lib/lengths.js';
-import { play } from '../lib/play.js';
+import { play, startSession } from '../lib/play.js';
 import Checks from '../components/Checks.vue';
 import Chips from '../components/Chips.vue';
 import Icon from '../components/Icon.vue';
@@ -25,8 +26,11 @@ const dir = ref(state.settings.dir);
 const share = ref(state.settings.share);
 const length = ref(state.settings.length);
 
-const WHY = { order: 'nothing here is a sentence', listen: 'this device cannot read aloud' };
-const kinds = computed(() => MODES.map((m) => ({ ...m, disabled: !allowed.value[m.id], why: allowed.value[m.id] ? '' : WHY[m.id] })));
+const isVerb = computed(() => set.value?.gen === 'verb');
+const WHY = computed(() => (isVerb.value
+  ? { order: 'verbs are picked or typed', listen: 'verbs are picked or typed' }
+  : { order: 'nothing here is a sentence', listen: 'this device cannot read aloud' }));
+const kinds = computed(() => MODES.map((m) => ({ ...m, disabled: !allowed.value[m.id], why: allowed.value[m.id] ? '' : WHY.value[m.id] })));
 const chosen = computed(() => MODES.map((m) => m.id).filter((id) => ticked.value.includes(id) && allowed.value[id]));
 const onlyOrder = computed(() => chosen.value.length === 1 && chosen.value[0] === 'order');
 const hint = computed(() => {
@@ -71,7 +75,24 @@ const spread = computed(() => {
   return `${count} ${count === 1 ? 'question' : 'questions'}: ${count} of the ${total} words${set.value.ordered ? ', the first in line' : ', chosen at random'}.`;
 });
 const shownWords = computed(() => (set.value.kind === 'list' ? set.value.ids.slice(0, 120) : []));
+// A group of verbs lists its verbs in the tense practised, each form with its pronouns.
+const verbTables = computed(() => {
+  if (!isVerb.value) return [];
+  const group = VERB_GROUPS.find((g) => g.id === set.value.id);
+  return verbsOf(group).map((verb) => ({ ...verb, forms: verb[group.tense] }));
+});
+const persons = PERSONS.map((person) => person.pronouns.slice(0, 3).join(', '));
 const problem = ref('');
+
+// Flashcards: flip through the words, nothing judged or counted.
+function cards() {
+  Object.assign(state.settings, { dir: dir.value, share: share.value });
+  save();
+  const list = buildCards(props.id, questions.value);
+  if (!list) return;
+  play.cards = { title: set.value.title, cards: list, dir: dir.value };
+  router.push('/cards');
+}
 
 function start() {
   Object.assign(state.settings, { modes: ticked.value.slice(), dir: dir.value, share: share.value, length: length.value });
@@ -81,7 +102,7 @@ function start() {
     problem.value = 'Nothing here fits the kinds of exercise you ticked. Tick another.';
     return;
   }
-  play.session = { ...session, length: questions.value };
+  startSession({ ...session, length: questions.value });
   router.push('/play');
 }
 </script>
@@ -112,7 +133,7 @@ function start() {
       <p class="hint" :class="{ bad: !chosen.length }">{{ hint }}</p>
     </section>
 
-    <section class="tight">
+    <section v-if="!isVerb" class="tight">
       <h2>Which way</h2>
       <Chips v-model="shownDir" :options="dirs" label="Which way" />
     </section>
@@ -125,6 +146,19 @@ function start() {
 
     <p v-if="problem" class="hint bad">{{ problem }}</p>
     <button type="button" class="btn primary wide" :disabled="!chosen.length" @click="start">Start</button>
+    <button v-if="isList" type="button" class="btn wide" @click="cards">Flashcards <span class="btn-sub">no score, just practice</span></button>
+
+    <section v-if="verbTables.length">
+      <h2>The verbs</h2>
+      <ul class="list verb-list">
+        <li v-for="verb in verbTables" :key="verb.inf" class="verb-row">
+          <p><b lang="pt-BR">{{ verb.inf }}</b> <span class="w-en">{{ verb.en }}</span></p>
+          <dl lang="pt-BR">
+            <div v-for="(form, i) in verb.forms" :key="i"><dt>{{ persons[i] }}</dt><dd>{{ form }}</dd></div>
+          </dl>
+        </li>
+      </ul>
+    </section>
 
     <section v-if="shownWords.length">
       <h2>Words</h2>

@@ -2,11 +2,12 @@
 // of questions; each has what is asked, how (mode: one of the kinds the learner
 // ticked) and which way (dir).
 import { items } from '../content/index.js';
-import { getItem, getSet, state } from '../store.js';
-import { alternatives, checkDigits, checkEn, checkPt, clean, cleanEn, shownEn, stripAccents, tilesOf } from './text.js';
+import { getItem, getSet, ownRevision, state } from '../store.js';
+import { alternatives, checkDigits, checkEn, checkPt, clean, cleanEn, meaningKey, shownEn, stripAccents, tilesOf } from './text.js';
 import { formatNumber, numberAnswers, toWords, NUMBER_WORDS } from './numbers.js';
 import { formatTime, timeWords } from './clock.js';
 import { speech } from './speech.js';
+import { PERSONS, VERB_FORMS, verbsOf } from './verbs.js';
 
 // The kinds of exercise. The learner ticks the ones wanted; all of them is the default.
 export const MODES = [
@@ -52,19 +53,38 @@ const spokenForms = (pt) => alternatives(pt).flatMap((form) => (form.endsWith('-
 
 function ofItem(item) {
   return {
-    id: item.id, pt: item.pt, en: shownEn(item.en), say: item.say, note: item.note, g: item.g,
+    id: item.id, pt: item.pt, en: shownEn(item.en), say: item.say, note: item.note, g: item.g, example: item.example || null,
     ptAccept: spokenForms(item.pt), enAccept: alternatives(item.en), tiles: tilesOf(item.pt),
   };
 }
 
 function ofNumber(n, setId) {
   const pt = toWords(n);
-  return { gen: setId, value: n, pt, en: formatNumber(n), digits: true, ptAccept: numberAnswers(n), tiles: pt.split(' ') };
+  return { gen: setId, value: n, pt, en: formatNumber(n), digits: [formatNumber(n)], ptAccept: numberAnswers(n), tiles: pt.split(' ') };
 }
 
+// Three o'clock may be typed "3" as well as "3:00".
 function ofTime(h, m, setId) {
   const time = timeWords(h, m);
-  return { gen: setId, value: h * 60 + m, pt: time.pt, en: formatTime(h, m), digits: true, ptAccept: time.accept, tiles: time.pt.split(' ') };
+  const digits = m === 0 ? [formatTime(h, m), String(h)] : [formatTime(h, m)];
+  return { gen: setId, value: h * 60 + m, clock: true, pt: time.pt, en: formatTime(h, m), digits, ptAccept: time.accept, tiles: time.pt.split(' ') };
+}
+
+// A verb in a tense, for one person: "nós ___" (falar, past) → "falamos". The person is
+// shown with one of its pronouns ("a gente" too); any of them may be typed with the form.
+function ofVerb(set) {
+  const verbs = verbsOf(set);
+  const verb = verbs[rand(verbs.length)];
+  const person = PERSONS[rand(PERSONS.length)];
+  const pronoun = person.pronouns[rand(person.pronouns.length)];
+  const table = verb[set.tense];
+  const form = table[person.slot];
+  return {
+    gen: set.id, value: `${verb.inf}|${person.slot}`, form,
+    verb: { inf: verb.inf, en: verb.en, tense: set.tense, pronoun, table, all: [...verb.present, ...verb.past] },
+    pt: `${pronoun} ${form}`, en: `${pronoun} ___ (${verb.inf}${set.tense === 'past' ? ', past' : ''})`,
+    ptAccept: [form, ...person.pronouns.map((other) => `${other} ${form}`)], tiles: [],
+  };
 }
 
 const canOrder = (entry) => entry.tiles.length >= 3;
@@ -98,6 +118,7 @@ function generate(set, count, wanted = () => true) {
   for (let tries = 0; out.length < count && tries < count * 40; tries++) {
     let entry;
     if (set.gen === 'clock') entry = ofTime(1 + rand(12), rand(12) * 5, set.id);
+    else if (set.gen === 'verb') entry = ofVerb(set);
     else entry = ofNumber(randomNumber(set.min, set.max), set.id);
     if (!wanted(entry)) continue;
     if (seen.has(entry.value)) continue;
@@ -173,7 +194,14 @@ function distractors(entry, set) {
   return out;
 }
 
+// A verb's wrong choices are its other forms, in either tense.
+function verbChoices(entry) {
+  const forms = [...new Set(entry.verb.all)].filter((form) => form !== entry.form);
+  return shuffle([{ text: entry.form, correct: true }, ...shuffle(forms).slice(0, 3).map((form) => ({ text: form, correct: false }))]);
+}
+
 function choices(entry, dir, set) {
+  if (entry.verb) return verbChoices(entry);
   const side = dir === 'pt-en' ? 'en' : 'pt';
   return shuffle([
     { text: entry[side], correct: true },
@@ -193,18 +221,18 @@ function scrambled(tiles) {
 // ---- a session
 
 // Which kinds a set can offer at all: word order needs sentences, listening needs a voice.
+// Counting and clock times always have answers of three words or more.
+// A verb is picked or typed.
 export function modesFor(set) {
-  const sample = set.kind === 'gen' ? generate(set, 6) : set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem);
-  return {
-    choose: true, type: true,
-    listen: speech.supported,
-    order: sample.some(canOrder),
-  };
+  if (set.gen === 'verb') return { choose: true, type: true, listen: false, order: false };
+  const order = set.kind === 'gen' || set.ids.some((id) => getItem(id) && canOrder(ofItem(getItem(id))));
+  return { choose: true, type: true, listen: speech.supported, order };
 }
 
 // The ticked kinds that can ask this entry.
 const kindsFor = (entry, modes) => modes.filter((kind) => (
-  kind === 'order' ? canOrder(entry) : kind === 'listen' ? speech.supported : true
+  entry.verb ? kind === 'choose' || kind === 'type'
+    : kind === 'order' ? canOrder(entry) : kind === 'listen' ? speech.supported : true
 ));
 
 function prepare(entry, modes, dir, set) {
@@ -265,6 +293,17 @@ export function buildSession(setId, { modes, dir, length }, only) {
   };
 }
 
+// Flashcards: the words of a set to flip through, chosen as a session's are. Nothing is judged.
+export function buildCards(setId, length) {
+  const set = getSet(setId);
+  if (!set || set.kind !== 'list') return null;
+  const pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem);
+  if (!pool.length) return null;
+  if (length > pool.length) return inRounds(pool, length);
+  const picked = set.ordered ? pool : shuffle(pool);
+  return shuffle(length ? picked.slice(0, length) : picked);
+}
+
 // A wrong answer comes back once at the end: the same kind of question, asked afresh.
 export function again(question, set) {
   const { mode, dir, options, bank, retry, ...entry } = question;
@@ -273,28 +312,60 @@ export function again(question, set) {
 
 // ---- judging
 
-// Every word the app knows, in each language and without accents: what tells a typo
-// ("diaa") from another word ("ela" for "ele"). Built once, and again when the user adds a word.
+// Every word the app knows, in each language: what tells a typo ("diaa") from another
+// word ("ela" for "ele"), with accents (exact) and without (pt). byMeaning finds the
+// words that share a meaning, for synonyms. Built again when the learner's own words change.
 let known = null;
 function vocabulary() {
-  const ownCount = Object.keys(state.own).length;
-  if (known && known.ownCount === ownCount) return known;
-  const pt = new Set([...NUMBER_WORDS, 'meia', 'meio', 'hora', 'horas', 'uma', 'duas', 'são', 'é', 'para', 'as'].map(stripAccents));
+  if (known && known.revision === ownRevision.n) return known;
+  const base = [...NUMBER_WORDS, 'meia', 'meio', 'hora', 'horas', 'uma', 'duas', 'são', 'é', 'para', 'as'];
+  const exact = new Set(base);
   const en = new Set();
+  const byMeaning = new Map();
   for (const item of [...items.values(), ...Object.values(state.own)]) {
-    for (const form of alternatives(item.pt)) stripAccents(clean(form)).split(' ').forEach((word) => pt.add(word));
-    for (const form of alternatives(item.en)) cleanEn(form).split(' ').forEach((word) => en.add(word));
+    for (const form of alternatives(item.pt)) clean(form).split(' ').forEach((word) => exact.add(word));
+    for (const form of alternatives(item.en)) {
+      cleanEn(form).split(' ').forEach((word) => en.add(word));
+      const key = meaningKey(form);
+      if (!key || /^\d+$/.test(key)) continue;
+      if (!byMeaning.has(key)) byMeaning.set(key, []);
+      byMeaning.get(key).push(item);
+    }
   }
-  known = { ownCount, pt, en };
+  for (const word of VERB_FORMS) exact.add(word);
+  const pt = new Set([...exact].map(stripAccents));
+  known = { revision: ownRevision.n, pt, exact, en, byMeaning };
   return known;
+}
+
+// Another word that carries the meaning asked for is right too: asked "hello", "oi" is as
+// good as "olá". The meaning is compared with its clarifier, so "to be (permanent)" never
+// accepts "estar".
+function synonym(question, answer, options) {
+  const { byMeaning } = vocabulary();
+  const seen = new Set([question.id]);
+  for (const form of question.enAccept || []) {
+    for (const item of byMeaning.get(meaningKey(form)) || []) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      const result = checkPt(answer, spokenForms(item.pt), options);
+      if (result.ok) return { ok: true, also: alternatives(item.pt)[0], accents: result.accents };
+    }
+  }
+  return null;
 }
 
 export function judge(question, answer) {
   if (question.mode === 'choose' || question.mode === 'listen') return { ok: !!answer.correct };
-  if (question.mode === 'order') return checkPt(answer.join(' '), question.ptAccept, { strict: true });
   const words = vocabulary();
+  const isExact = (word) => words.exact.has(word);
+  if (question.verb) return checkPt(answer, question.ptAccept, { strict: state.settings.strictAccents, isExact });
+  if (question.mode === 'order') return checkPt(answer.join(' '), question.ptAccept, { strict: true });
   if (question.dir === 'en-pt') {
-    return checkPt(answer, question.ptAccept, { strict: state.settings.strictAccents, isWord: (word) => words.pt.has(word) });
+    const options = { strict: state.settings.strictAccents, isWord: (word) => words.pt.has(word), isExact };
+    const result = checkPt(answer, question.ptAccept, options);
+    if (result.ok || result.close || question.gen) return result;
+    return synonym(question, answer, { strict: options.strict, isExact }) || result;
   }
-  return question.digits ? checkDigits(answer, question.en) : checkEn(answer, question.enAccept, (word) => words.en.has(word));
+  return question.digits ? checkDigits(answer, question.digits) : checkEn(answer, question.enAccept, (word) => words.en.has(word));
 }

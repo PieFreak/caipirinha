@@ -14,7 +14,7 @@ const score = computed(() => scoreOf(props.id));
 <template>
   <li v-if="item" class="word-row" :style="{ '--shade': shade(score), '--tint': shade(score, 0.1) }">
     <router-link :to="{ name: 'word', params: { id } }" class="word-main">
-      <span class="w-pt">{{ item.pt }}<small v-if="item.g" class="gender">{{ item.g }}</small></span>
+      <span class="w-pt" lang="pt-BR">{{ item.pt }}<small v-if="item.g" class="gender">{{ item.g }}</small></span>
       <span class="w-en">{{ shownEn(item.en) }}</span>
     </router-link>
     <span class="pct" :class="{ none: score == null }">{{ score == null ? 'new' : Math.round(score * 100) + '%' }}</span>

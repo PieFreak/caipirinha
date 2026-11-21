@@ -4,6 +4,7 @@ import { state, dayKey, librarySize, shade } from '../store.js';
 import { modesTitle } from '../lib/session.js';
 import LineChart from '../components/LineChart.vue';
 import Toucan from '../components/art/Toucan.vue';
+import Icon from '../components/Icon.vue';
 
 const DAY = 86400000;
 const WINDOW = 30;
@@ -63,6 +64,7 @@ const kindsOf = (session) => session.modes || (session.mode && session.mode !== 
       <h1>Progress</h1>
       <p class="sub">{{ librarySize }} {{ librarySize === 1 ? 'word' : 'words' }} in your library</p>
     </div>
+    <router-link to="/settings" class="icon-btn" aria-label="Settings"><Icon name="settings" /></router-link>
   </header>
 
   <div v-if="!totals.n && !librarySize" class="cheer">

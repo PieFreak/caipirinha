@@ -22,7 +22,6 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   the same word, then those that start with it, then those with a word that starts with it. The same word in the
   library cannot be added again; one the app has but the library lacks joins with one tap. The meaning field does
   the same for meanings. Accents and capitals do not hide a match, but "avó" and "avô" are two words.
-- **On a computer**, keys 1 to 4 pick a choice and Enter moves on.
 - **Kinds of exercise are ticked**, any number of the four, all of them by default (there is no "Mixed" choice).
   Each question is one of the ticked kinds that can ask it; the ticks are remembered.
 - **Session length** (`src/lib/lengths.js`): a share of the set, 5%, 10%, 25%, 50%, 75%, 100% or 200% (every word
@@ -45,6 +44,34 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   backdrop behind every page (a pale sun, palm leaves, waves: the owner found plain cream "boring"). The backdrop
   is fixed, clipped to the window and in tints one step from the ground, and a session keeps only its sun and waves. The brand line is written "Aprenda português. Viva o Brasil!" (a
   language's name takes no capital in Portuguese). There is a dark theme in the same colors.
+- **The review of 2026-11-21** (the owner asked for all of it): what follows came from it.
+- **Judging typed answers** (`src/lib/text.js`, `judge` in `src/lib/session.js`):
+  - Another word with the same meaning is right ("oi" when "hello" asks for "olá"); meanings are compared with
+    their clarifiers, so "to be (permanent)" never accepts "estar".
+  - Spoken short forms count: tô, tá, tava, pra, pro, cê are read as estou, está, estava, para, para o, você.
+  - A missing or extra word is never a typo; only a space may be.
+  - An accent that makes another word ("avô" for "avó", "esta" for "está", "e" for "é") gets one retry with a hint,
+    then counts as wrong. A plain missing accent stays a slip ("voce").
+  - Three o'clock may be typed "3". Every question has "I don't know".
+- **Scores fade** by 1% for each whole day since a word was last practised (`faded` in `src/lib/score.js`, the
+  owner's number); an answer counts from the faded score. "I know this" puts a word at 100% (on Today it also
+  brings another new word, with Undo).
+- **Daily review** on Today: up to 20 words, the weakest and the longest unseen in turn, started in one tap.
+- **Flashcards** (Setup › Flashcards, `src/views/Cards.vue`): flip through a set; nothing is judged or recorded
+  (the owner: "it won't be correct or anything").
+- **Verbs** (`src/lib/verbs.js`): present and past (pretérito perfeito), four Brazilian forms (eu; você/ele/ela/a
+  gente; nós; vocês/eles/elas), picked or typed. Regular verbs by rule, irregular ones written out.
+- **Example sentences** for every single word: `src/content/examples/` (part1 and part2 written by two helpers,
+  part3 by hand), one line `word | Portuguese | English`. An AI wrote them; no native speaker has read them.
+- **Nothing is lost**: an unfinished session is kept on the phone and offered on Today; restoring a backup asks
+  first and can be undone; damaged stored data is repaired on loading (`repair` in `src/store.js`); a word keeps
+  a copy of its text, so a word the content drops stays in the library; when a word's Portuguese is corrected,
+  add old id → new id to `src/content/renames.js`, or its history is lost. Never change a word's first form
+  without that line.
+- **Accessibility**: text follows the phone's text size (rem of `-apple-system-body`); Portuguese is marked
+  `lang="pt-BR"`; each page sets the title and moves focus to its heading; tap targets are 44 px.
+- **On a computer**: 1–4 choose, 1–9 place word tiles, Backspace takes one back, Enter checks or moves on,
+  R replays, ? gives up, Esc ends; on flashcards Space turns over and the arrows move.
 - Not built, because they break the rules above: an AI conversation partner, reminders sent by the app.
 
 ## Where it lives

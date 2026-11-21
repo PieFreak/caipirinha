@@ -18,7 +18,12 @@ function world() {
     open: async (name) => {
       if (!stores.has(name)) stores.set(name, new Map());
       const store = stores.get(name);
-      return { addAll: async (urls) => urls.forEach((url) => store.set(address(url).href, `copy of ${url}`)) };
+      return {
+        addAll: async (requests) => requests.forEach((request) => {
+          const url = address(request);
+          store.set(url.href, `copy of ${FILES.find((file) => new URL(file, BASE).href === url.href)}`);
+        }),
+      };
     },
     keys: async () => [...stores.keys()],
     delete: async (name) => stores.delete(name),
@@ -30,7 +35,7 @@ function world() {
     },
   };
   const handlers = {};
-  const calls = { skipWaiting: 0, claim: 0, network: [] };
+  const calls = { skipWaiting: 0, claim: 0, network: [], requests: [] };
   const self = {
     location: new URL('sw.js', BASE),
     addEventListener: (type, handler) => { handlers[type] = handler; },
@@ -38,7 +43,10 @@ function world() {
     clients: { claim: async () => { calls.claim++; } },
   };
   const fetch = async (request) => { calls.network.push(request.url); return `network copy of ${request.url}`; };
-  new Function('self', 'caches', 'fetch', source)(self, caches, fetch);
+  class Request {
+    constructor(url, init = {}) { this.url = String(url); this.cache = init.cache; calls.requests.push(this); }
+  }
+  new Function('self', 'caches', 'fetch', 'Request', source)(self, caches, fetch, Request);
   const fire = async (type, request) => {
     let waited;
     let answer;
@@ -54,6 +62,8 @@ const get = (path, mode = 'no-cors') => ({ url: new URL(path, BASE).href, method
 test('installing keeps a copy of every file and takes over at once', async () => {
   const { caches, calls, fire } = world();
   await fire('install');
+  assert.ok(calls.requests.length === FILES.length && calls.requests.every((request) => request.cache === 'reload'),
+    'every file fetched past the browser cache');
   assert.deepEqual(await caches.keys(), ['caipirinha-test']);
   assert.equal(caches.stores.get('caipirinha-test').size, FILES.length);
   assert.equal(calls.skipWaiting, 1);

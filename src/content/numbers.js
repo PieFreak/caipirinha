@@ -7,7 +7,7 @@ export default [
     section: 'Numbers',
     text: `
 zero = zero / 0 ~ ZEH-roo
-um = one / 1 ~ oong # Before a feminine word it is "uma": "uma casa".
+um = one / 1 / a (masc.) ~ oong # Before a feminine word it is "uma": "uma casa".
 dois = two / 2 ~ doyss # Before a feminine word it is "duas": "duas casas".
 três = three / 3 ~ trayss
 quatro = four / 4 ~ KWAH-troo
@@ -27,7 +27,7 @@ dez = ten / 10 ~ dehss
 onze = eleven / 11 ~ OHN-zee
 doze = twelve / 12 ~ DOH-zee
 treze = thirteen / 13 ~ TRAY-zee
-quatorze / catorze = fourteen / 14 ~ kwah-TOHR-zee # Both spellings are correct.
+quatorze / catorze = fourteen / 14 ~ kwah-TOHR-zee / kah-TOHR-zee # Both spellings are correct.
 quinze = fifteen / 15 ~ KEEN-zee
 dezesseis = sixteen / 16 ~ deh-zeh-SAYSS
 dezessete = seventeen / 17 ~ deh-zeh-SEH-chee
