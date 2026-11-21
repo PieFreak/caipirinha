@@ -268,11 +268,22 @@ section.tight { gap: 8px; }
   border: 1.5px solid var(--line); border-radius: var(--radius);
   background: var(--surface); color: var(--ink); font-size: 18px; overflow-wrap: anywhere;
 }
+/* The number key that picks a choice: shown only where there is a mouse, so a keyboard too. */
+.option kbd { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .option { display: flex; align-items: center; gap: 12px; }
+  .option kbd {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 7px;
+    font: 600 13px/1 system-ui, sans-serif; color: var(--muted);
+  }
+}
 .option:disabled { opacity: 1; color: var(--muted); }
 .option.right { border-color: var(--good); background: var(--good-soft); color: var(--ink); font-weight: 600; }
 .option.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--ink); }
 
 .typing { display: flex; flex-direction: column; gap: 10px; }
+.almost { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; font-weight: 600; }
 .accents { display: flex; flex-wrap: wrap; gap: 6px; }
 .accent { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 18px; }
 
@@ -302,6 +313,7 @@ section.tight { gap: 8px; }
 .fb-answer .en { color: var(--ink); opacity: 0.8; }
 .fb-given { font-size: 15px; color: var(--muted); }
 .fb-given span { color: var(--ink); text-decoration: line-through; text-decoration-color: var(--bad); }
+.fb-given.slip span { text-decoration: none; font-weight: 600; }
 .feedback .note { background: color-mix(in srgb, var(--surface) 70%, transparent); border-left-color: currentColor; }
 .feedback .speak { background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--ink); }
 .session-foot { margin-top: auto; position: sticky; bottom: calc(env(safe-area-inset-bottom) + 12px); }

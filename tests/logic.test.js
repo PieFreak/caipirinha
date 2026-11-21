@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { toWords, numberAnswers, formatNumber } from '../src/lib/numbers.js';
 import { timeWords, formatTime } from '../src/lib/clock.js';
-import { checkPt, checkEn, checkDigits, parseLines, idOf, tilesOf, cleanEn } from '../src/lib/text.js';
+import { nextScore } from '../src/lib/score.js';
+import { checkPt, checkEn, checkDigits, distance, parseLines, idOf, tilesOf, cleanEn } from '../src/lib/text.js';
 
 test('numbers are written as Brazilians write them', () => {
   const cases = {
@@ -65,7 +66,7 @@ test('clock times', () => {
 test('a typed Portuguese answer', () => {
   assert.deepEqual(checkPt('Você', ['você']), { ok: true });
   assert.deepEqual(checkPt('voce', ['você']), { ok: true, accents: 'você' });
-  assert.deepEqual(checkPt('voce', ['você'], true), { ok: false, accents: 'você' });
+  assert.deepEqual(checkPt('voce', ['você'], { strict: true }), { ok: false, accents: 'você' });
   assert.equal(checkPt('obrigada', ['obrigado', 'obrigada']).ok, true);
   assert.equal(checkPt('Tudo bem?', ['tudo bem?']).ok, true);
   assert.equal(checkPt('segunda feira', ['segunda-feira']).ok, true);
@@ -73,6 +74,68 @@ test('a typed Portuguese answer', () => {
   assert.equal(checkPt('eu sei', ['sei']).ok, true);
   assert.equal(checkPt('', ['você']).ok, false);
   assert.equal(checkPt('voces', ['você']).ok, false);
+});
+
+test('a typo counts as right, another word does not', () => {
+  const words = new Set(['bom', 'boa', 'dia', 'ele', 'ela', 'sessenta', 'setenta', 'oi', 'ou', 'voce', 'eu', 'nao', 'falo', 'fala']);
+  const isWord = (word) => words.has(word);
+  const pt = (typed, accepted, strict = false) => checkPt(typed, accepted, { strict, isWord });
+
+  assert.deepEqual(pt('bom diaa', ['bom dia']), { ok: true, typo: 'bom dia' });
+  assert.equal(pt('bomdia', ['bom dia']).typo, 'bom dia', 'a missing space');
+  assert.equal(pt('bmo dia', ['bom dia']).typo, 'bom dia', 'two letters swapped');
+  assert.equal(pt('bon dia', ['bom dia']).typo, 'bom dia', 'a wrong letter');
+  assert.equal(pt('diaa', ['dia']).ok, true, 'a short word alone');
+  assert.equal(pt('obrigadoo', ['obrigado', 'obrigada']).ok, true);
+  assert.equal(pt('seguda-fiera', ['segunda-feira']).ok, true, 'two slips in a long answer');
+  assert.equal(pt('eu nao falo portuges', ['eu não falo português']).ok, true, 'accents left out and a letter missing');
+
+  assert.equal(pt('ela', ['ele']).ok, false, 'another word');
+  assert.equal(pt('boa dia', ['bom dia']).ok, false, 'another word inside a phrase');
+  assert.equal(pt('setenta', ['sessenta']).ok, false, 'another number');
+  assert.equal(pt('eu nao fala', ['eu não falo']).ok, false, 'another form of the verb');
+  assert.equal(pt('ou', ['oi']).ok, false, 'another two-letter word');
+  assert.equal(pt('oii', ['oi']).ok, true, 'a short word with a letter too many');
+  assert.equal(pt('o', ['a']).ok, false, 'one letter leaves no room for a slip');
+  assert.equal(pt('oiii', ['oi']).ok, false);
+  assert.equal(pt('bom diaaa', ['bom dia']).ok, false, 'two slips in a short answer');
+  assert.equal(pt('sgeunda-fiera x', ['segunda-feira']).ok, false, 'too many slips');
+
+  // When accents count, a missing accent is still wrong, and a typo is still forgiven.
+  assert.deepEqual(pt('voce', ['você'], true), { ok: false, accents: 'você' });
+  assert.equal(pt('bom diaa', ['bom dia'], true).ok, true);
+  assert.equal(pt('vocee', ['você'], true).ok, false);
+
+  // Without a way to tell words apart nothing is forgiven (word order uses this).
+  assert.equal(checkPt('bom diaa', ['bom dia']).ok, false);
+
+  const english = new Set(['for', 'four', 'love', 'live', 'house']);
+  const en = (typed, accepted) => checkEn(typed, accepted, (word) => english.has(word));
+  assert.deepEqual(en('helo', ['hello', 'hi']), { ok: true, typo: 'hello' });
+  assert.equal(en('to speek', ['to speak']).ok, true);
+  assert.equal(en('for', ['four']).ok, false);
+  assert.equal(en('to love', ['to live']).ok, false);
+  assert.equal(en('hii', ['hi']).ok, true);
+  assert.equal(distance('abcd', 'abdc'), 1);
+  assert.equal(distance('', 'abc'), 3);
+  assert.equal(distance('kitten', 'sitting'), 3);
+});
+
+test('how well a word is known: +10% for right, −15% for wrong', () => {
+  const after = (start, answers) => [...answers].reduce((score, c) => nextScore(score, c === '1'), start);
+  assert.equal(after(0.2, '11111111'), 1, 'from 20%, eight right answers reach 100%');
+  assert.equal(after(1, '0'), 0.85, 'a mistake at 100% leaves 85%');
+  assert.equal(after(0.2, '111111110'), 0.85);
+  assert.equal(after(0.85, '11'), 1, 'and two right answers bring it back');
+  assert.equal(after(null, '1'), 0.3, 'a first answer counts from 20%');
+  assert.equal(after(null, '0'), 0.05);
+  assert.equal(after(null, '11111111'), 1);
+  assert.equal(after(0.1, '0'), 0, 'never below 0%');
+  assert.equal(after(1, '1'), 1, 'never above 100%');
+  assert.equal(after(0, '00011'), 0.2);
+  // Many answers leave no rounding dust behind.
+  assert.equal(after(null, '10'.repeat(20) + '1'.repeat(10)), 1);
+  assert.equal(after(0.5, '1010'), 0.4);
 });
 
 test('a typed English answer', () => {

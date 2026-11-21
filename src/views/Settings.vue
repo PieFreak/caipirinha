@@ -90,6 +90,9 @@ function erase() {
       <input v-model="autoSpeak" type="checkbox">
       <span>Read the Portuguese aloud after each answer</span>
     </label>
+    <p class="hint">A typo does not fail you. One letter off (two in a long answer) and you get a chance to correct it;
+      if it is still a typo after that, it counts as right and you are shown the spelling. This does not apply when
+      what you typed is another word, such as "ela" for "ele".</p>
   </section>
 
   <section class="tight">

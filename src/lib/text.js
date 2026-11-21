@@ -77,9 +77,40 @@ export function cleanEn(s) {
 // Portuguese drops "eu" freely: "não entendo" is "eu não entendo".
 const cleanPt = (s) => clean(s).replace(/^eu /, '');
 
+// How far apart two texts are, in slips of the finger: a letter added, dropped or
+// replaced, or two neighbours swapped.
+export function distance(a, b) {
+  let before = null;
+  let last = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      let best = Math.min(last[j] + 1, row[j - 1] + 1, last[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) best = Math.min(best, before[j - 2] + 1);
+      row.push(best);
+    }
+    before = last;
+    last = row;
+  }
+  return last[b.length];
+}
+
+// A typo is forgiven: one slip in an answer of 2 to 8 letters, two in a longer one,
+// none in a single letter. But not when what was typed is itself a word ("ela" for "ele",
+// "ou" for "oi", "setenta" for "sessenta"): that is another word, not a slip. isWord says
+// what a word is.
+function isSlip(typed, form, isWord) {
+  const letters = form.replace(/ /g, '').length;
+  const allowed = letters <= 1 ? 0 : letters <= 8 ? 1 : 2;
+  if (!allowed || Math.abs(typed.length - form.length) > allowed || distance(typed, form) > allowed) return false;
+  const expected = new Set(form.split(' '));
+  return !typed.split(' ').some((word) => !expected.has(word) && isWord(stripAccents(word)));
+}
+
 // A typed Portuguese answer. Missing accents are a slip, not an error, unless strict:
-// the result then names the accented form, so the screen can show it.
-export function checkPt(input, accepted, strict = false) {
+// the result then names the accented form, so the screen can show it. With isWord
+// (word → is it a Portuguese word the app knows?) a typo counts as right too, and is named.
+export function checkPt(input, accepted, { strict = false, isWord = null } = {}) {
   const typed = cleanPt(input);
   if (!typed) return { ok: false };
   for (const form of accepted) if (cleanPt(form) === typed) return { ok: true };
@@ -87,12 +118,22 @@ export function checkPt(input, accepted, strict = false) {
   for (const form of accepted) {
     if (stripAccents(cleanPt(form)) === bare) return { ok: !strict, accents: form };
   }
+  if (isWord) {
+    // When accents count, a missing one is one of the slips; otherwise accents are left out of it.
+    const plain = strict ? (s) => s : stripAccents;
+    for (const form of accepted) if (isSlip(plain(typed), plain(cleanPt(form)), isWord)) return { ok: true, typo: form };
+  }
   return { ok: false };
 }
 
-export function checkEn(input, accepted) {
+export function checkEn(input, accepted, isWord = null) {
   const typed = cleanEn(input);
-  return { ok: !!typed && accepted.some((form) => cleanEn(form) === typed) };
+  if (!typed) return { ok: false };
+  if (accepted.some((form) => cleanEn(form) === typed)) return { ok: true };
+  if (isWord) {
+    for (const form of accepted) if (isSlip(typed, cleanEn(form), isWord)) return { ok: true, typo: form };
+  }
+  return { ok: false };
 }
 
 // A number or a clock time typed in digits: only the digits count ("3:30" is "330").

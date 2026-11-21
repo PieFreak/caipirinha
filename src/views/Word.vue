@@ -53,6 +53,7 @@ function remove() {
         <span class="standing-text">{{ word.n ? `${word.ok} right, ${word.bad} wrong` : 'not practised yet' }}</span>
         <span class="meter" aria-hidden="true"><span :style="{ width: (score || 0) * 100 + '%' }"></span></span>
       </div>
+      <p class="hint">A right answer adds 10%, a wrong one takes off 15%.</p>
       <p v-if="word.hist" class="dots" :aria-label="`Latest ${word.hist.length} answers, oldest first`">
         <span v-for="(c, i) in word.hist" :key="i" :class="c === '1' ? 'good' : 'bad'">
           <Icon :name="c === '1' ? 'check' : 'close'" :size="13" />

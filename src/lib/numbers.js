@@ -8,6 +8,9 @@ const HUNDREDS = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhen
 
 export const MAX = 1000000;
 
+// Every word a number is written with: a typed answer made of these is another number, not a typo.
+export const NUMBER_WORDS = [...UNITS, ...TENS, ...HUNDREDS, 'catorze', 'cem', 'mil', 'milhão', 'e'].filter(Boolean);
+
 function below1000(n) {
   if (n === 100) return 'cem';
   const parts = [];

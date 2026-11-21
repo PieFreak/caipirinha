@@ -2,8 +2,8 @@
 // of questions; each has what is asked, how (mode) and which way (dir).
 import { items } from '../content/index.js';
 import { getItem, getSet, state } from '../store.js';
-import { alternatives, checkDigits, checkEn, checkPt, clean, cleanEn, shownEn, tilesOf } from './text.js';
-import { formatNumber, numberAnswers, toWords } from './numbers.js';
+import { alternatives, checkDigits, checkEn, checkPt, clean, cleanEn, shownEn, stripAccents, tilesOf } from './text.js';
+import { formatNumber, numberAnswers, toWords, NUMBER_WORDS } from './numbers.js';
 import { formatTime, timeWords } from './clock.js';
 import { speech } from './speech.js';
 
@@ -230,9 +230,28 @@ export function again(question, session) {
 
 // ---- judging
 
+// Every word the app knows, in each language and without accents: what tells a typo
+// ("diaa") from another word ("ela" for "ele"). Built once, and again when the user adds a word.
+let known = null;
+function vocabulary() {
+  const ownCount = Object.keys(state.own).length;
+  if (known && known.ownCount === ownCount) return known;
+  const pt = new Set([...NUMBER_WORDS, 'meia', 'meio', 'hora', 'horas', 'uma', 'duas', 'são', 'é', 'para', 'as'].map(stripAccents));
+  const en = new Set();
+  for (const item of [...items.values(), ...Object.values(state.own)]) {
+    for (const form of alternatives(item.pt)) stripAccents(clean(form)).split(' ').forEach((word) => pt.add(word));
+    for (const form of alternatives(item.en)) cleanEn(form).split(' ').forEach((word) => en.add(word));
+  }
+  known = { ownCount, pt, en };
+  return known;
+}
+
 export function judge(question, answer) {
   if (question.mode === 'choose' || question.mode === 'listen') return { ok: !!answer.correct };
-  if (question.mode === 'order') return checkPt(answer.join(' '), question.ptAccept, true);
-  if (question.dir === 'en-pt') return checkPt(answer, question.ptAccept, state.settings.strictAccents);
-  return question.digits ? checkDigits(answer, question.en) : checkEn(answer, question.enAccept);
+  if (question.mode === 'order') return checkPt(answer.join(' '), question.ptAccept, { strict: true });
+  const words = vocabulary();
+  if (question.dir === 'en-pt') {
+    return checkPt(answer, question.ptAccept, { strict: state.settings.strictAccents, isWord: (word) => words.pt.has(word) });
+  }
+  return question.digits ? checkDigits(answer, question.en) : checkEn(answer, question.enAccept, (word) => words.en.has(word));
 }

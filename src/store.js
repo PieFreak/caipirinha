@@ -4,6 +4,7 @@
 import { reactive, computed } from 'vue';
 import { items, groups, groupsById, courseOrder, COMMON } from './content/index.js';
 import { idOf } from './lib/text.js';
+import { nextScore } from './lib/score.js';
 
 const KEY = 'caipirinha.v1';
 
@@ -72,13 +73,10 @@ function touch(id, src) {
   return state.words[id];
 }
 
-// How well a word is known, 0 to 1: the first answer sets it (right 0.5, wrong 0),
-// each later one moves it 30% of the way to 1 or to 0. So a word turns green only
-// after being right several times, and a mistake shows at once.
+// An answer moves how well the word is known (lib/score.js: +10% right, −15% wrong).
 export function record(id, ok) {
   const word = touch(id, 'practice');
-  const target = ok ? 1 : 0;
-  word.s = word.n === 0 ? target * 0.5 : Math.round((word.s + (target - word.s) * 0.3) * 1000) / 1000;
+  word.s = nextScore(word.n === 0 ? null : word.s, ok);
   word.n++;
   if (ok) word.ok++; else word.bad++;
   word.last = Date.now();

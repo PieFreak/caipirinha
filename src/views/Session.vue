@@ -17,7 +17,8 @@ const question = computed(() => queue[index.value]);
 
 const typed = ref('');
 const placed = ref([]);      // word order: which tiles of the bank are placed, in order
-const verdict = ref(null);   // { ok, accents, given } once answered
+const verdict = ref(null);   // { ok, accents, typo, given } once answered
+const almost = ref(false);   // a typo was typed: one chance to correct it is running
 const firstTries = [];       // what the result screen lists: every question's first answer
 const input = ref(null);
 
@@ -42,6 +43,7 @@ function ask() {
   typed.value = '';
   placed.value = [];
   verdict.value = null;
+  almost.value = false;
   const q = question.value;
   if (q.mode === 'listen') speak(q.pt);
   if (q.mode === 'type') nextTick(() => input.value?.focus());
@@ -50,7 +52,15 @@ function ask() {
 function answer(given) {
   if (verdict.value || (typeof given === 'string' && !given.trim())) return;
   const q = question.value;
-  verdict.value = { ...judge(q, given), given: Array.isArray(given) ? given.join(' ') : given.text ?? given };
+  const result = judge(q, given);
+  // A typo is not judged at once: the answer stays open for one correction. Sent again
+  // still a letter off, it counts as right and the spelling is shown.
+  if (result.typo && !almost.value) {
+    almost.value = true;
+    nextTick(() => input.value?.focus());
+    return;
+  }
+  verdict.value = { ...result, given: Array.isArray(given) ? given.join(' ') : given.text ?? given };
   if (state.settings.autoSpeak && q.mode !== 'listen') speak(q.pt);
 }
 
@@ -120,11 +130,20 @@ function addAccent(char) {
   input.value?.focus();
 }
 
-// Enter moves on (a keyboard on a desk). In the answer field the form does it itself.
+// For a keyboard on a desk: 1 to 4 pick a choice, Enter moves on.
+// In the answer field keys are text, and the form handles Enter itself.
 function onKey(event) {
-  if (event.key === 'Enter' && verdict.value && event.target.tagName !== 'INPUT') {
+  if (event.target.tagName === 'INPUT' || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key === 'Enter' && verdict.value) {
     event.preventDefault();
     next();
+    return;
+  }
+  const options = question.value?.options;
+  const number = Number(event.key);
+  if (options && !verdict.value && number >= 1 && number <= options.length) {
+    event.preventDefault();
+    answer(options[number - 1]);
   }
 }
 
@@ -170,7 +189,7 @@ onBeforeUnmount(() => {
     <div v-if="question.options" class="options">
       <button v-for="(option, i) in question.options" :key="i" type="button" class="option"
         :class="{ right: verdict && option.correct, wrong: verdict && !option.correct && verdict.given === option.text }"
-        :disabled="!!verdict" @click="answer(option)">{{ option.text }}</button>
+        :disabled="!!verdict" @click="answer(option)"><kbd aria-hidden="true">{{ i + 1 }}</kbd>{{ option.text }}</button>
     </div>
 
     <!-- Typing -->
@@ -184,6 +203,7 @@ onBeforeUnmount(() => {
       <div v-if="question.dir === 'en-pt' && !verdict" class="accents" aria-label="Accented letters">
         <button v-for="char in ACCENTS" :key="char" type="button" class="accent" @click="addAccent(char)">{{ char }}</button>
       </div>
+      <p v-if="almost && !verdict" class="almost" role="status">Almost. Check your spelling and try once more.</p>
       <button v-if="!verdict" type="submit" class="btn primary wide" :disabled="!typed.trim()">Check</button>
     </form>
 
@@ -204,6 +224,7 @@ onBeforeUnmount(() => {
       <p class="fb-head">
         <Icon :name="verdict.ok ? 'check' : 'close'" :size="20" />
         <span v-if="verdict.ok && verdict.accents">Right, but mind the accents</span>
+        <span v-else-if="verdict.ok && verdict.typo">Right, apart from a typo</span>
         <span v-else-if="verdict.ok">Right</span>
         <span v-else>Not quite</span>
       </p>
@@ -216,6 +237,9 @@ onBeforeUnmount(() => {
         <SpeakButton :text="question.pt" />
       </div>
       <p v-if="!verdict.ok && (question.mode === 'type' || question.mode === 'order') && verdict.given" class="fb-given">
+        You wrote: <span>{{ verdict.given }}</span>
+      </p>
+      <p v-else-if="verdict.typo && !verdict.overruled" class="fb-given slip">
         You wrote: <span>{{ verdict.given }}</span>
       </p>
       <p v-if="question.note" class="note">{{ question.note }}</p>
