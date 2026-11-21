@@ -9,8 +9,8 @@ const route = useRoute();
 const reload = () => window.location.reload();
 // A session and its result fill the screen: no tab bar, and a calmer backdrop.
 watchEffect(() => document.documentElement.classList.toggle('plain', !!route.meta.full));
-// The dyslexia-friendly font, when chosen in Settings.
-watchEffect(() => document.documentElement.classList.toggle('dyslexic', state.settings.font === 'dyslexic'));
+// The readable font (Lexend) unless Settings says Standard.
+watchEffect(() => document.documentElement.classList.toggle('readable', state.settings.font === 'lexend'));
 </script>
 
 <template>

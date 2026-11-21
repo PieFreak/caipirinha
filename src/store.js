@@ -23,7 +23,7 @@ const fresh = () => ({
   settings: {
     perDay: 5, source: 'course', strictAccents: false, autoSpeak: true, voice: '', rate: 0.9,
     modes: MODES.slice(), dir: 'both', share: 25, length: 10,
-    font: 'dyslexic',  // 'dyslexic' (OpenDyslexic) or 'standard'
+    font: 'lexend',  // 'lexend' (made for easy reading) or 'standard'
   },
 });
 
@@ -57,7 +57,7 @@ function settingsOf(stored) {
     dir: oneOf(s.dir, ['both', 'pt-en', 'en-pt'], base.dir),
     share: oneOf(share, SHARES, base.share),
     length: oneOf(s.length, COUNTS, base.length),
-    font: oneOf(s.font, ['dyslexic', 'standard'], base.font),
+    font: oneOf(s.font, ['lexend', 'standard'], base.font),
   };
 }
 

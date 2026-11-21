@@ -104,13 +104,13 @@ function erase() {
   <section class="tight">
     <h2>Font</h2>
     <div class="chips" role="radiogroup" aria-label="Font">
-      <button type="button" class="chip font-sample-dyslexic" role="radio" :class="{ on: font === 'dyslexic' }"
-        :aria-checked="font === 'dyslexic'" @click="font = 'dyslexic'">Dyslexia-friendly</button>
+      <button type="button" class="chip font-sample-readable" role="radio" :class="{ on: font === 'lexend' }"
+        :aria-checked="font === 'lexend'" @click="font = 'lexend'">Lexend</button>
       <button type="button" class="chip font-sample-standard" role="radio" :class="{ on: font === 'standard' }"
         :aria-checked="font === 'standard'" @click="font = 'standard'">Standard</button>
     </div>
-    <p class="hint">Dyslexia-friendly uses OpenDyslexic: heavier letter bottoms, so letters are harder to flip or mix up,
-      and no slanted text. Each button is shown in its own font.</p>
+    <p class="hint">Lexend was made to make reading easier: roomy spacing, clear letters, and no slanted text.
+      Standard is the phone's own font with a serif for headings. Each button is shown in its own font.</p>
   </section>
 
   <section class="tight">

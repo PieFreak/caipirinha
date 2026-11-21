@@ -22,9 +22,9 @@ test('damaged data is repaired, never a failure to open', () => {
   assert.equal(damaged.settings.share, 25, 'an unknown share takes the default');
   assert.deepEqual(damaged.settings.modes, ['choose', 'type', 'listen', 'order']);
   assert.equal(damaged.settings.length, 10);
-  assert.equal(damaged.settings.font, 'dyslexic', 'the dyslexia-friendly font unless chosen otherwise');
+  assert.equal(damaged.settings.font, 'lexend', 'Lexend unless chosen otherwise');
   assert.equal(repair({ settings: { font: 'standard' } }).settings.font, 'standard');
-  assert.equal(repair({ settings: { font: 'comic' } }).settings.font, 'dyslexic');
+  assert.equal(repair({ settings: { font: 'dyslexic' } }).settings.font, 'lexend', 'OpenDyslexic from before becomes Lexend');
   assert.equal(repair({ settings: { length: -2 } }).settings.share, 200, '"All ×2" from before is 200%');
   assert.equal(repair({ settings: { mode: 'type' } }).settings.modes.join(), 'type', 'one mode from before');
   const words = repair({ words: { olá: { n: '3', s: 7, hist: '10x1' }, '': { n: 1 } } }).words;

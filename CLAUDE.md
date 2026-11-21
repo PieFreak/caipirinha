@@ -72,10 +72,11 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   a copy of its text, so a word the content drops stays in the library; when a word's Portuguese is corrected,
   add old id → new id to `src/content/renames.js`, or its history is lost. Never change a word's first form
   without that line.
-- **The dyslexia-friendly font** (the owner asked, 2026-11-22): OpenDyslexic (SIL Open Font License, bundled from
-  `@fontsource/opendyslexic`), on by default, Settings › Font switches to the standard fonts. In that mode
-  everything is OpenDyslexic, sized by `font-size-adjust: 0.5` to the standard letter height so layouts hold,
-  with no italics and no capitals-only labels.
+- **The font** (the owner, 2026-11-22): Lexend, made for easy reading (SIL Open Font License, bundled from
+  `@fontsource-variable/lexend`), on by default for everything including headings and Portuguese words; Settings ›
+  Font › Standard brings back the phone's font with Fraunces. In Lexend mode: no italics, no capitals-only labels.
+  OpenDyslexic was tried first and turned down ("not the font I thought it was"); the owner liked its roomy
+  spacing in the tab bar, which Lexend keeps.
 - **Accessibility**: text follows the phone's text size (rem of `-apple-system-body`); Portuguese is marked
   `lang="pt-BR"`; each page sets the title and moves focus to its heading; tap targets are 44 px.
 - **On a computer**: 1–4 choose, 1–9 place word tiles, Backspace takes one back, Enter checks or moves on,
