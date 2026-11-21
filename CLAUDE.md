@@ -21,8 +21,9 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - **On a computer**, keys 1 to 4 pick a choice and Enter moves on.
 - **Kinds of exercise are ticked**, any number of the four, all of them by default (there is no "Mixed" choice).
   Each question is one of the ticked kinds that can ask it; the ticks are remembered.
-- **Session length**: 5 to 50 in fives, or all, for every set. More questions than the set has words brings the
-  words round again, each round in a new random order, so every word is asked equally often (give or take one).
+- **Session length**: 5 to 50 in fives, but only the numbers below the set's size; then "All" (every word once)
+  and "All ×2" (every word twice, in two rounds, each in its own random order). The owner found numbers above the
+  set's size confusing. Counting and clock times offer only the numbers.
 - **The voice** is the device's own, the most natural one it lists (`src/lib/voices.js` ranks them: an iPhone lists
   eight synthesiser voices for Brazilian Portuguese beside Luciana, and the first by name is one of them). The owner
   found the voice "horrid" (2026-11-21), before the ranking. If the best device voice is still not good enough, the

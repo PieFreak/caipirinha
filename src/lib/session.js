@@ -30,10 +30,14 @@ export const DIRS = [
   { id: 'en-pt', title: 'English → Portuguese' },
 ];
 
-// How many questions: 5 to 50 in fives, or (0) every word of the set.
+// How many questions: 5 to 50 in fives, every word of the set once (ALL), or every
+// word twice (TWICE): two rounds, each in its own random order.
+export const ALL = 0;
+export const TWICE = -2;
 export const LENGTHS = [
   ...[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((n) => ({ id: n, title: String(n) })),
-  { id: 0, title: 'All' },
+  { id: ALL, title: 'All' },
+  { id: TWICE, title: 'All ×2' },
 ];
 
 const rand = (n) => Math.floor(Math.random() * n);
@@ -252,8 +256,9 @@ export function buildSession(setId, { modes, dir, length }, only) {
     entries = generate(set, length || 20, askable);
   } else {
     const pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem).filter(askable);
-    if (length > pool.length) {
-      entries = inRounds(pool, length);
+    const count = length === TWICE ? pool.length * 2 : length;
+    if (count > pool.length) {
+      entries = inRounds(pool, count);
     } else {
       // The weakest or oldest words are chosen in order, then asked in any order.
       const picked = set.ordered ? pool : shuffle(pool);

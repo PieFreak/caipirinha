@@ -2,7 +2,7 @@
 // and how evenly the words come round when there are more questions than words.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSession, poolSize } from '../src/lib/session.js';
+import { buildSession, poolSize, ALL, LENGTHS, TWICE } from '../src/lib/session.js';
 import { getSet } from '../src/store.js';
 
 const count = (list) => list.reduce((seen, key) => seen.set(key, (seen.get(key) || 0) + 1), new Map());
@@ -23,6 +23,22 @@ test('more questions than words: every word comes round equally often', () => {
       for (let from = 0; from + words <= length; from += words) assert.equal(new Set(ids.slice(from, from + words)).size, words);
     }
   }
+});
+
+test('"All ×2": every word exactly twice, in two rounds', () => {
+  assert.equal(LENGTHS.find((option) => option.id === TWICE).title, 'All ×2');
+  for (const setId of ['days', 'months', 'greetings']) {
+    for (let run = 0; run < 20; run++) {
+      const ids = buildSession(setId, { modes: ['choose', 'type'], dir: 'both', length: TWICE }).queue.map((question) => question.id);
+      const words = getSet(setId).ids.length;
+      assert.equal(ids.length, words * 2);
+      assert.deepEqual([...new Set(count(ids).values())], [2], `${setId}: every word twice`);
+      assert.equal(new Set(ids.slice(0, words)).size, words, 'the first round has every word');
+      assert.equal(new Set(ids.slice(words)).size, words, 'and so has the second');
+      ids.forEach((id, i) => assert.notEqual(id, ids[i - 1], `${setId}: the same word twice running`));
+    }
+  }
+  assert.equal(buildSession('days', { modes: ['choose'], dir: 'both', length: ALL }).queue.length, 7);
 });
 
 test('the order differs from round to round and from session to session', () => {

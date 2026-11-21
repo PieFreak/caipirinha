@@ -1,9 +1,10 @@
 <script setup>
-import { blade, sparkle } from './shapes.js';
+import { blade } from './shapes.js';
 
 // What lies behind every page, fixed in place while the page scrolls over it: a pale
 // sun in one corner, palm leaves in two, and waves along the bottom. All in tints close
-// to the ground color, so words and cards on top stay easy to read. Each piece keeps
+// to the ground color, and nothing in a strong color: a bright mark that stands still
+// while the page scrolls can land beside a button and look like part of it. Each piece keeps
 // its own size whatever the window is, so a wide window does not get giant shapes.
 const TOP = [
   { turn: 12, length: 150, width: 18, tone: 2 },
@@ -30,12 +31,6 @@ const CORNER = [
         <path v-for="frond in TOP" :key="frond.turn" :d="blade(frond.length, frond.width)"
           :transform="`rotate(${frond.turn})`" :fill="`var(--bd-leaf-${frond.tone})`" />
       </g>
-    </svg>
-
-    <svg class="bd-stars bd-extra" viewBox="0 0 120 120" focusable="false">
-      <path :d="sparkle(8)" transform="translate(22 78)" fill="var(--bd-star)" />
-      <path :d="sparkle(5)" transform="translate(64 104)" fill="var(--bd-star)" />
-      <path :d="sparkle(4)" transform="translate(8 28)" fill="var(--bd-star)" />
     </svg>
 
     <svg class="bd-corner bd-extra" viewBox="0 0 190 210" focusable="false">

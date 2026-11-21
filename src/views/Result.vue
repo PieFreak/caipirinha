@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { play } from '../lib/play.js';
-import { buildSession } from '../lib/session.js';
+import { buildSession, ALL } from '../lib/session.js';
 import { shade } from '../store.js';
 import Icon from '../components/Icon.vue';
 import Toucan from '../components/art/Toucan.vue';
@@ -21,7 +21,7 @@ const cheer = computed(() => (share.value >= 0.9 ? { pt: 'Mandou bem!', en: 'You
 const missed = computed(() => (result ? [...new Set(result.tries.filter((t) => !t.ok && t.id).map((t) => t.id))] : []));
 
 function start(ids) {
-  const session = buildSession(result.setId, { modes: result.modes, dir: result.dir, length: ids ? 0 : result.length }, ids);
+  const session = buildSession(result.setId, { modes: result.modes, dir: result.dir, length: ids ? ALL : result.length }, ids);
   if (!session) return;
   play.session = { ...session, length: result.length };
   router.replace('/play');

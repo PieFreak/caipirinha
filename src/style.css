@@ -51,7 +51,6 @@
   --bd-leaf-2: #cfe9d4;
   --bd-wave-1: #d9eee8;
   --bd-wave-2: #c3e4dc;
-  --bd-star: #ffc247;
   --bird: #0f4c4c;           /* the toucan's feathers, and its branch */
   --bird-shade: #0a3838;
   --branch: #1b6b63;
@@ -96,7 +95,6 @@
     --bd-leaf-2: #10453d;
     --bd-wave-1: #0b3333;
     --bd-wave-2: #0f3d3c;
-    --bd-star: #8a7a3c;
     --bird: #237a76;
     --bird-shade: #185f5c;
     --branch: #2f8f86;
@@ -145,7 +143,6 @@ button:disabled { cursor: default; }
 .backdrop svg { position: absolute; display: block; }
 .bd-sun { top: -92px; right: -92px; width: 280px; height: 280px; }
 .bd-top { top: 0; left: 0; width: 240px; height: 260px; }
-.bd-stars { top: 96px; right: 150px; width: 120px; height: 120px; }
 .bd-corner { right: 0; bottom: 64px; width: 190px; height: 210px; }
 .bd-waves { left: 0; bottom: 0; width: 100%; height: 190px; }
 html.plain .bd-extra { display: none; }
