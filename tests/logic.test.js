@@ -127,9 +127,10 @@ test('how well a word is known: +10% for right, −15% for wrong', () => {
   assert.equal(after(1, '0'), 0.85, 'a mistake at 100% leaves 85%');
   assert.equal(after(0.2, '111111110'), 0.85);
   assert.equal(after(0.85, '11'), 1, 'and two right answers bring it back');
-  assert.equal(after(null, '1'), 0.3, 'a first answer counts from 20%');
-  assert.equal(after(null, '0'), 0.05);
-  assert.equal(after(null, '11111111'), 1);
+  assert.equal(after(null, '1'), 0.1, 'a new word starts at 0%');
+  assert.equal(after(null, '0'), 0);
+  assert.equal(after(null, '111111111'), 0.9);
+  assert.equal(after(null, '1111111111'), 1, 'ten right answers reach 100%');
   assert.equal(after(0.1, '0'), 0, 'never below 0%');
   assert.equal(after(1, '1'), 1, 'never above 100%');
   assert.equal(after(0, '00011'), 0.2);

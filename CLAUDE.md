@@ -14,7 +14,7 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - **Learning from zero**, for travel and interest. Explanations are in English.
 - **Spoken Brazilian is a side note**, never a section of its own: a word's note says "Spoken: …".
 - **How well a word is known** (`src/lib/score.js`): +10% for a right answer, −15% for a wrong one, between 0% and
-  100%. A first answer counts from 20%, which is the assistant's reading of "let's say we start at 20".
+  100%. A new word starts at 0% (the owner's choice), so ten right answers in a row reach 100%.
 - **Typos** in typed answers never fail outright: one letter off (two in a long answer) gives one chance to
   correct it, and a second try that is still a typo counts as right. Typing another real word ("ela" for "ele")
   is a mistake, not a typo.
