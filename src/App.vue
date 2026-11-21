@@ -3,12 +3,14 @@ import { watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import TabBar from './components/TabBar.vue';
 import Backdrop from './components/art/Backdrop.vue';
-import { ui } from './store.js';
+import { state, ui } from './store.js';
 
 const route = useRoute();
 const reload = () => window.location.reload();
 // A session and its result fill the screen: no tab bar, and a calmer backdrop.
 watchEffect(() => document.documentElement.classList.toggle('plain', !!route.meta.full));
+// The dyslexia-friendly font, when chosen in Settings.
+watchEffect(() => document.documentElement.classList.toggle('dyslexic', state.settings.font === 'dyslexic'));
 </script>
 
 <template>

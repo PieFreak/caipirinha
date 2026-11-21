@@ -1,33 +1,29 @@
 <script setup>
-import { blade, sparkle, wedges } from './shapes.js';
+import { blade, wedges } from './shapes.js';
 
-// The picture in the corner of Today's header: palm leaves rising from the corner and a
-// slice of lime, in full colour on the pale lime ground, kept to the right so the words
-// on the left stay clear.
-const LIME = wedges(8, 4.5, 19, 20);
+// The picture in the bottom-right corner of Today's header, beside the button: palm leaves
+// rising from the corner and a slice of lime, in full colour on the pale lime ground. It
+// stays in its corner, so the words above can use the whole width.
+const LIME = wedges(8, 4, 17, 20);
 const FRONDS = [
-  { turn: -98, length: 104, width: 13, color: '#2b9460' },
-  { turn: -120, length: 124, width: 15, color: '#3bb277' },
-  { turn: -142, length: 128, width: 15, color: '#32a66a' },
-  { turn: -164, length: 104, width: 13, color: '#2b9460' },
+  { turn: -96, length: 86, width: 11, color: '#2b9460' },
+  { turn: -118, length: 100, width: 13, color: '#3bb277' },
+  { turn: -140, length: 104, width: 13, color: '#32a66a' },
+  { turn: -162, length: 86, width: 11, color: '#2b9460' },
 ];
 </script>
 
 <template>
-  <svg viewBox="0 0 360 200" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false">
-    <g transform="translate(374 212)">
+  <svg viewBox="0 0 160 110" aria-hidden="true" focusable="false">
+    <g transform="translate(168 120)">
       <path v-for="frond in FRONDS" :key="frond.turn" :d="blade(frond.length, frond.width)"
         :transform="`rotate(${frond.turn})`" :fill="frond.color" />
     </g>
-
-    <g transform="translate(296 156)">
-      <circle r="31" fill="#32a66a" />
-      <circle r="26.5" fill="#f3fad9" />
-      <path v-for="segment in LIME" :key="segment" :d="segment" fill="#bfe373" stroke="#bfe373" stroke-width="1.6" stroke-linejoin="round" />
-      <path d="M-27.5 -8.5 A28.8 28.8 0 0 1 -8.5 -27.5" fill="none" stroke="#7fd29f" stroke-width="3" stroke-linecap="round" />
+    <g transform="translate(70 72)">
+      <circle r="28" fill="#32a66a" />
+      <circle r="24" fill="#f3fad9" />
+      <path v-for="segment in LIME" :key="segment" :d="segment" fill="#bfe373" stroke="#bfe373" stroke-width="1.5" stroke-linejoin="round" />
+      <path d="M-25 -7.5 A26 26 0 0 1 -7.5 -25" fill="none" stroke="#7fd29f" stroke-width="2.6" stroke-linecap="round" />
     </g>
-
-    <path :d="sparkle(6)" transform="translate(300 52)" fill="#ffc247" />
-    <path :d="sparkle(4)" transform="translate(330 84)" fill="#32a66a" opacity="0.7" />
   </svg>
 </template>

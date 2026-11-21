@@ -20,6 +20,7 @@ const bound = (key) => computed({ get: () => settings[key], set: (value) => { se
 const perDay = bound('perDay');
 const rate = bound('rate');
 const strictAccents = bound('strictAccents');
+const font = bound('font');
 const autoSpeak = bound('autoSpeak');
 const voice = computed({
   get: () => chosenVoice()?.name || '',
@@ -99,6 +100,18 @@ function erase() {
     <button type="button" class="icon-btn" aria-label="Back" @click="router.back()"><Icon name="back" /></button>
     <h1>Settings</h1>
   </header>
+
+  <section class="tight">
+    <h2>Font</h2>
+    <div class="chips" role="radiogroup" aria-label="Font">
+      <button type="button" class="chip font-sample-dyslexic" role="radio" :class="{ on: font === 'dyslexic' }"
+        :aria-checked="font === 'dyslexic'" @click="font = 'dyslexic'">Dyslexia-friendly</button>
+      <button type="button" class="chip font-sample-standard" role="radio" :class="{ on: font === 'standard' }"
+        :aria-checked="font === 'standard'" @click="font = 'standard'">Standard</button>
+    </div>
+    <p class="hint">Dyslexia-friendly uses OpenDyslexic: heavier letter bottoms, so letters are harder to flip or mix up,
+      and no slanted text. Each button is shown in its own font.</p>
+  </section>
 
   <section class="tight">
     <h2>New words each day</h2>
