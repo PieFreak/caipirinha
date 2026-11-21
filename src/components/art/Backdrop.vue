@@ -1,7 +1,8 @@
 <script setup>
 import { blade } from './shapes.js';
 
-// What lies behind every page, fixed in place while the page scrolls over it: a pale
+// What lies behind every page, fixed in place while the page scrolls over it: a sky
+// fading into the cream (the one gradient: the owner asked for it there only), a pale
 // sun in one corner, palm leaves in two, and waves along the bottom. All in tints close
 // to the ground color, and nothing in a strong color: a bright mark that stands still
 // while the page scrolls can land beside a button and look like part of it. Each piece keeps
@@ -21,6 +22,7 @@ const CORNER = [
 
 <template>
   <div class="backdrop" aria-hidden="true">
+    <div class="bd-sky"></div>
     <svg class="bd-sun" viewBox="0 0 280 280" focusable="false">
       <circle cx="140" cy="140" r="140" fill="var(--bd-sun)" />
       <circle cx="140" cy="140" r="92" fill="var(--bd-sun-core)" />

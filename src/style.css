@@ -57,7 +57,9 @@
   --unknown-soft: #f1e8d8;
   --series: var(--blue);     /* charts: one series, in the brand's blue */
   --grid: #f0e3ce;
-  /* The backdrop: tints one step away from the cream. */
+  /* The backdrop: tints one step away from the cream, and the sky above them. */
+  --sky-top: #cfe8f4;
+  --sky-mid: #e6f1f0;
   --bd-sun: #fff0c9;
   --bd-sun-core: #ffe6a9;
   --bd-leaf-1: #e0f1df;
@@ -106,6 +108,8 @@
     --unknown-soft: #123c3c;
     --series: #6189f3;
     --grid: #1b4a4a;
+    --sky-top: #0b3447;
+    --sky-mid: #0a2e36;
     --bd-sun: #0e3737;
     --bd-sun-core: #134242;
     --bd-leaf-1: #0c3a35;
@@ -163,6 +167,8 @@ button:disabled { cursor: default; }
    the sun and the waves stay. */
 .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .backdrop svg { position: absolute; display: block; }
+/* The sky: the one gradient in the app, from a soft blue at the top into the cream. */
+.bd-sky { position: absolute; inset: 0 0 auto; height: min(62vh, 520px); background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-mid) 38%, transparent 100%); }
 .bd-sun { top: -92px; right: -92px; width: 280px; height: 280px; }
 .bd-top { top: 0; left: 0; width: 240px; height: 260px; }
 .bd-corner { right: 0; bottom: 64px; width: 190px; height: 210px; }

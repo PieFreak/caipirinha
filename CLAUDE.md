@@ -38,7 +38,8 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   `#FFF8EE` as the ground, deep teal `#0F4C4C` for the main button and the Today header, tropical green `#32A66A`
   for progress, sunshine yellow `#FFC247` sparingly (what is heard, a tick, the count), ocean blue `#3567E8` for
   links and charts. Rounded cards with soft shadows; **almost no gradients** (the owner: "it looks ugly if
-  overdone"), so depth is shadow and a lighter or darker tone. Headings and Portuguese words are set in Fraunces
+  overdone"), so depth is shadow and a lighter or darker tone. The one gradient is the sky at the top of the
+  backdrop, soft blue fading into the cream (the owner asked for it there, 2026-11-22). Headings and Portuguese words are set in Fraunces
   (open license, bundled); the rest is the device's own font. Drawings are the app's own SVG (`src/components/art/`):
   the scene on Today, a toucan that speaks Portuguese on empty screens and at the end of a session, and the
   backdrop behind every page (a pale sun, palm leaves, waves: the owner found plain cream "boring"). The backdrop
