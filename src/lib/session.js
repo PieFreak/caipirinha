@@ -150,22 +150,27 @@ function distractors(entry, set) {
       ? nearTimes(entry.value).map((value) => ofTime(Math.floor(value / 60), value % 60, set.id))
       : nearNumbers(entry.value, set.min, set.max).map((value) => ofNumber(value, set.id));
   }
-  // From the same set first; a short set borrows words or phrases of the same kind.
-  const phrase = canOrder(entry);
-  const own = shuffle(set.ids.filter((id) => id !== entry.id));
-  const borrowed = shuffle([...items.keys()].filter((id) => !set.ids.includes(id) && canOrder(ofItem(items.get(id))) === phrase));
   // Never a choice that is also right: "como vai?" and "tudo bem?" both mean "how are you?".
   const meanings = (e) => [clean(e.pt), ...e.enAccept.map(cleanEn)];
   const out = [];
   const taken = new Set(meanings(entry));
-  for (const id of [...own, ...borrowed]) {
-    const item = getItem(id);
-    if (!item) continue;
-    const other = ofItem(item);
-    if (meanings(other).some((meaning) => taken.has(meaning))) continue;
-    meanings(other).forEach((meaning) => taken.add(meaning));
-    out.push(other);
-    if (out.length === 3) break;
+  const take = (ids) => {
+    for (const id of ids) {
+      if (out.length === 3) return;
+      const item = getItem(id);
+      if (!item) continue;
+      const other = ofItem(item);
+      if (meanings(other).some((meaning) => taken.has(meaning))) continue;
+      meanings(other).forEach((meaning) => taken.add(meaning));
+      out.push(other);
+    }
+  };
+  // From the same set first. Only a set too short to fill the choices borrows words
+  // or phrases of the same kind from the rest of the content.
+  take(shuffle(set.ids.filter((id) => id !== entry.id)));
+  if (out.length < 3) {
+    const phrase = canOrder(entry);
+    take(shuffle([...items.keys()].filter((id) => !set.ids.includes(id) && (tilesOf(items.get(id).pt).length >= 3) === phrase)));
   }
   return out;
 }
@@ -216,6 +221,25 @@ function prepare(entry, modes, dir, set) {
 }
 
 // "only" narrows a word list to those words: the ones missed in the session before.
+// More questions than words: the words come round after round, each round in a new
+// order, so every word is asked as often as the others, give or take one. The same
+// word never comes twice running where two rounds meet.
+function inRounds(pool, count) {
+  const out = [];
+  while (pool.length && out.length < count) {
+    const round = shuffle(pool);
+    if (out.length && round.length > 1 && round[0].id === out.at(-1).id) [round[0], round[1]] = [round[1], round[0]];
+    out.push(...round.slice(0, count - out.length));
+  }
+  return out;
+}
+
+// How many words of a set the ticked kinds can ask: what "all" means for it.
+export function poolSize(set, modes) {
+  if (!set || set.kind !== 'list') return 0;
+  return set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem).filter((entry) => kindsFor(entry, modes).length > 0).length;
+}
+
 // modes: the kinds of exercise ticked. Each question is one of them, chosen at random
 // among those that can ask it; a word none of them can ask is left out.
 export function buildSession(setId, { modes, dir, length }, only) {
@@ -227,11 +251,14 @@ export function buildSession(setId, { modes, dir, length }, only) {
   if (set.kind === 'gen') {
     entries = generate(set, length || 20, askable);
   } else {
-    let pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem).filter(askable);
-    if (!set.ordered) pool = shuffle(pool);
-    entries = length ? pool.slice(0, length) : pool;
-    // The weakest or oldest words are chosen in order, then asked in any order.
-    if (set.ordered) entries = shuffle(entries);
+    const pool = set.ids.map((id) => getItem(id)).filter(Boolean).map(ofItem).filter(askable);
+    if (length > pool.length) {
+      entries = inRounds(pool, length);
+    } else {
+      // The weakest or oldest words are chosen in order, then asked in any order.
+      const picked = set.ordered ? pool : shuffle(pool);
+      entries = shuffle(length ? picked.slice(0, length) : picked);
+    }
   }
   if (!entries.length) return null;
   return {

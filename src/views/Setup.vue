@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { getSet, setStats, shade, state, save } from '../store.js';
-import { buildSession, modesFor, DIRS, LENGTHS, MODES } from '../lib/session.js';
+import { buildSession, modesFor, poolSize, DIRS, LENGTHS, MODES } from '../lib/session.js';
 import { play } from '../lib/play.js';
 import Checks from '../components/Checks.vue';
 import Chips from '../components/Chips.vue';
@@ -39,14 +39,23 @@ const shownDir = computed({
   get: () => (onlyOrder.value ? 'en-pt' : dir.value),
   set: (value) => { dir.value = value; },
 });
-// A set of 12 words offers 5, 10 and All: a larger number would be All under another name.
 // Counting and clock times are made up without end, so there is no All for them.
-const lengths = computed(() => (set.value.kind === 'gen'
-  ? LENGTHS.filter((option) => option.id)
-  : LENGTHS.filter((option) => !option.id || option.id < set.value.ids.length)));
+const lengths = computed(() => (set.value.kind === 'gen' ? LENGTHS.filter((option) => option.id) : LENGTHS));
 const shownLength = computed({
   get: () => (lengths.value.some((option) => option.id === length.value) ? length.value : set.value.kind === 'gen' ? 20 : 0),
   set: (value) => { length.value = value; },
+});
+// What the chosen number means here: more questions than words brings the words round again.
+const words = computed(() => poolSize(set.value, chosen.value));
+const spread = computed(() => {
+  const count = shownLength.value;
+  const total = words.value;
+  if (set.value.kind !== 'list' || !total) return '';
+  if (!count || count === total) return `Every one of the ${total} ${total === 1 ? 'word' : 'words'} once.`;
+  if (count < total) return `${count} of the ${total} words${set.value.ordered ? ', the first in line' : ', chosen at random'}.`;
+  const times = Math.floor(count / total);
+  const each = count % total ? `${times} or ${times + 1}` : `${times}`;
+  return `${total} ${total === 1 ? 'word' : 'words'}, each asked ${each} times, in a new random order every round.`;
 });
 const shownWords = computed(() => (set.value.kind === 'list' ? set.value.ids.slice(0, 120) : []));
 const problem = ref('');
@@ -98,6 +107,7 @@ function start() {
     <section class="tight">
       <h2>How many</h2>
       <Chips v-model="shownLength" :options="lengths" label="How many questions" />
+      <p v-if="spread" class="hint">{{ spread }}</p>
     </section>
 
     <p v-if="problem" class="hint bad">{{ problem }}</p>

@@ -11,7 +11,8 @@ const result = play.result;
 onMounted(() => { if (!result) router.replace('/practice'); });
 
 const share = computed(() => (result && result.n ? result.ok / result.n : 0));
-const missed = computed(() => (result ? result.tries.filter((t) => !t.ok && t.id).map((t) => t.id) : []));
+// Each missed word once, however often it was missed.
+const missed = computed(() => (result ? [...new Set(result.tries.filter((t) => !t.ok && t.id).map((t) => t.id))] : []));
 
 function start(ids) {
   const session = buildSession(result.setId, { modes: result.modes, dir: result.dir, length: ids ? 0 : result.length }, ids);
