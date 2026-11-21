@@ -34,8 +34,9 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   links and charts. Rounded cards with soft shadows; **almost no gradients** (the owner: "it looks ugly if
   overdone"), so depth is shadow and a lighter or darker tone. Headings and Portuguese words are set in Fraunces
   (open license, bundled); the rest is the device's own font. Drawings are the app's own SVG (`src/components/art/`):
-  the scene on Today and a toucan that speaks Portuguese on empty screens and at the end of a session. Used
-  selectively: no picture in a session. The brand line is written "Aprenda português. Viva o Brasil!" (a
+  the scene on Today, a toucan that speaks Portuguese on empty screens and at the end of a session, and the
+  backdrop behind every page (a pale sun, palm leaves, waves: the owner found plain cream "boring"). The backdrop
+  is fixed, clipped to the window and in tints one step from the ground, and a session keeps only its sun and waves. The brand line is written "Aprenda português. Viva o Brasil!" (a
   language's name takes no capital in Portuguese). There is a dark theme in the same colors.
 - Not built, because they break the rules above: an AI conversation partner, reminders sent by the app.
 
