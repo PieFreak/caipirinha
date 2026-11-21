@@ -2,7 +2,8 @@
 // and how evenly the words come round when there are more questions than words.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSession, poolSize, ALL, LENGTHS, TWICE } from '../src/lib/session.js';
+import { buildSession, poolSize, ALL } from '../src/lib/session.js';
+import { COUNTS, SHARES, questionsFor, sharesFor } from '../src/lib/lengths.js';
 import { getSet } from '../src/store.js';
 
 const count = (list) => list.reduce((seen, key) => seen.set(key, (seen.get(key) || 0) + 1), new Map());
@@ -25,12 +26,38 @@ test('more questions than words: every word comes round equally often', () => {
   }
 });
 
-test('"All ×2": every word exactly twice, in two rounds', () => {
-  assert.equal(LENGTHS.find((option) => option.id === TWICE).title, 'All ×2');
+test('the shares a set offers, and how many questions each is', () => {
+  assert.deepEqual(SHARES, [5, 10, 25, 50, 75, 100, 200]);
+  // Below ten words only half, all and twice.
+  assert.deepEqual(sharesFor(7), [50, 100, 200]);
+  assert.deepEqual(sharesFor(9), [50, 100, 200]);
+  assert.deepEqual([50, 100, 200].map((share) => questionsFor(share, 7)), [4, 7, 14]);
+  assert.deepEqual(sharesFor(5).map((share) => questionsFor(share, 5)), [3, 5, 10]);
+  // From ten words on, every share, unless two come to the same number of questions.
+  assert.deepEqual(sharesFor(10), [10, 25, 50, 75, 100, 200], '5% and 10% of 10 are both one question');
+  assert.deepEqual(sharesFor(12), [10, 25, 50, 75, 100, 200]);
+  assert.deepEqual(sharesFor(26), SHARES);
+  assert.deepEqual(SHARES.map((share) => questionsFor(share, 26)), [1, 3, 7, 13, 20, 26, 52]);
+  assert.deepEqual(SHARES.map((share) => questionsFor(share, 100)), [5, 10, 25, 50, 75, 100, 200]);
+  assert.deepEqual(SHARES.map((share) => questionsFor(share, 600)), [30, 60, 150, 300, 450, 600, 1200]);
+  // Whatever the size: never no question, never two choices of the same length, and all and twice are there.
+  for (let total = 1; total <= 700; total++) {
+    const counts = sharesFor(total).map((share) => questionsFor(share, total));
+    assert.ok(counts.every((n) => n >= 1), `${total} words`);
+    assert.equal(new Set(counts).size, counts.length, `${total} words: ${counts}`);
+    assert.ok(sharesFor(total).includes(200) && questionsFor(200, total) === total * 2);
+    assert.ok(total === 1 || sharesFor(total).includes(100));
+    assert.equal(questionsFor(100, total), total);
+  }
+  assert.deepEqual(sharesFor(1), [100, 200], 'half of one word is the word');
+  assert.deepEqual(COUNTS, [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+});
+
+test('200%: every word exactly twice, in two rounds', () => {
   for (const setId of ['days', 'months', 'greetings']) {
     for (let run = 0; run < 20; run++) {
-      const ids = buildSession(setId, { modes: ['choose', 'type'], dir: 'both', length: TWICE }).queue.map((question) => question.id);
       const words = getSet(setId).ids.length;
+      const ids = buildSession(setId, { modes: ['choose', 'type'], dir: 'both', length: questionsFor(200, words) }).queue.map((question) => question.id);
       assert.equal(ids.length, words * 2);
       assert.deepEqual([...new Set(count(ids).values())], [2], `${setId}: every word twice`);
       assert.equal(new Set(ids.slice(0, words)).size, words, 'the first round has every word');

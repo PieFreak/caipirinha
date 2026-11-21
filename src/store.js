@@ -18,16 +18,22 @@ const fresh = () => ({
   gen: {},       // generated sets (counting, clock) → { n, ok, recent }
   settings: {
     perDay: 5, source: 'course', strictAccents: false, autoSpeak: true, voice: '', rate: 0.9,
-    modes: ['choose', 'type', 'listen', 'order'], dir: 'both', length: 10,
+    modes: ['choose', 'type', 'listen', 'order'], dir: 'both', share: 25, length: 10,
   },
 });
 
 // Settings read from the phone or from a backup, on top of today's defaults. An earlier
 // version kept one way of practising ("mode"): it becomes the kinds of exercise ticked.
+// share: how much of a set of words a session asks, in percent (200: every word twice).
+// length: how many questions a session of counting or clock times has.
 function settingsOf(stored = {}) {
   const { mode, ...kept } = stored;
   const settings = { ...fresh().settings, ...kept };
   if (!Array.isArray(kept.modes)) settings.modes = !mode || mode === 'mixed' ? fresh().settings.modes : [mode];
+  // The length of a session was a number, with 0 for all and -2 for all twice: now a share.
+  if (kept.share === undefined && kept.length === 0) settings.share = 100;
+  if (kept.share === undefined && kept.length === -2) settings.share = 200;
+  if (!(settings.length > 0)) settings.length = fresh().settings.length;
   return settings;
 }
 

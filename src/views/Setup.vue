@@ -2,7 +2,8 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { getSet, setStats, shade, state, save } from '../store.js';
-import { buildSession, modesFor, poolSize, ALL, DIRS, LENGTHS, MODES, TWICE } from '../lib/session.js';
+import { buildSession, modesFor, poolSize, DIRS, MODES } from '../lib/session.js';
+import { COUNTS, questionsFor, sharesFor } from '../lib/lengths.js';
 import { play } from '../lib/play.js';
 import Checks from '../components/Checks.vue';
 import Chips from '../components/Chips.vue';
@@ -21,6 +22,7 @@ const allowed = computed(() => (empty.value ? {} : modesFor(set.value)));
 // One this set cannot offer is shown unticked here, and stays ticked for other sets.
 const ticked = ref(state.settings.modes.slice());
 const dir = ref(state.settings.dir);
+const share = ref(state.settings.share);
 const length = ref(state.settings.length);
 
 const WHY = { order: 'nothing here is a sentence', listen: 'this device cannot read aloud' };
@@ -41,37 +43,45 @@ const shownDir = computed({
 });
 // How many words of this set the ticked kinds can ask.
 const words = computed(() => poolSize(set.value, chosen.value));
-// A set of 26 words offers 5 to 25, All and All ×2: a number above 26 would mean nothing
-// clear. Counting and clock times are made up without end, so they offer only numbers.
-const lengths = computed(() => (set.value.kind === 'gen'
-  ? LENGTHS.filter((option) => option.id > 0)
-  : LENGTHS.filter((option) => option.id <= 0 || option.id < words.value)));
+// A set of words is asked by share: 5% to 100% of it, or 200% for every word twice
+// (a small set offers only half, all and twice). Counting and clock times are made up
+// without end, so they are asked by number. The last choice of each is remembered; one
+// a set does not offer falls back to all of it, without being forgotten.
+const isList = computed(() => set.value.kind === 'list');
+const lengths = computed(() => (isList.value
+  ? sharesFor(words.value).map((percent) => ({ id: percent, title: `${percent}%` }))
+  : COUNTS.map((n) => ({ id: n, title: String(n) }))));
 const shownLength = computed({
-  get: () => (lengths.value.some((option) => option.id === length.value) ? length.value : set.value.kind === 'gen' ? 20 : ALL),
-  set: (value) => { length.value = value; },
+  get: () => {
+    const wanted = isList.value ? share.value : length.value;
+    return lengths.value.some((option) => option.id === wanted) ? wanted : isList.value ? 100 : 10;
+  },
+  set: (value) => { if (isList.value) share.value = value; else length.value = value; },
 });
+// How many questions that is.
+const questions = computed(() => (isList.value ? questionsFor(shownLength.value, words.value) : shownLength.value));
 // What the choice means here, in words.
 const spread = computed(() => {
-  const count = shownLength.value;
   const total = words.value;
-  if (set.value.kind !== 'list' || !total) return '';
-  const all = `${total === 1 ? 'The one word' : `All ${total} words`}`;
-  if (count === TWICE) return `${all} twice: ${total * 2} questions in two rounds, each in its own random order.`;
-  if (count === ALL) return `${all}, once each.`;
-  return `${count} of the ${total} words${set.value.ordered ? ', the first in line' : ', chosen at random'}.`;
+  if (!isList.value || !total) return '';
+  const all = total === 1 ? 'The one word' : `All ${total} words`;
+  if (shownLength.value === 200) return `${all} twice: ${questions.value} questions in two rounds, each in its own random order.`;
+  if (shownLength.value === 100) return `${all}, once each.`;
+  const count = questions.value;
+  return `${count} ${count === 1 ? 'question' : 'questions'}: ${count} of the ${total} words${set.value.ordered ? ', the first in line' : ', chosen at random'}.`;
 });
 const shownWords = computed(() => (set.value.kind === 'list' ? set.value.ids.slice(0, 120) : []));
 const problem = ref('');
 
 function start() {
-  Object.assign(state.settings, { modes: ticked.value.slice(), dir: dir.value, length: length.value });
+  Object.assign(state.settings, { modes: ticked.value.slice(), dir: dir.value, share: share.value, length: length.value });
   save();
-  const session = buildSession(props.id, { modes: chosen.value, dir: shownDir.value, length: shownLength.value });
+  const session = buildSession(props.id, { modes: chosen.value, dir: shownDir.value, length: questions.value });
   if (!session) {
     problem.value = 'Nothing here fits the kinds of exercise you ticked. Tick another.';
     return;
   }
-  play.session = { ...session, length: shownLength.value };
+  play.session = { ...session, length: questions.value };
   router.push('/play');
 }
 </script>
@@ -109,7 +119,7 @@ function start() {
 
     <section class="tight">
       <h2>How many</h2>
-      <Chips v-model="shownLength" class="compact" :options="lengths" label="How many questions" />
+      <Chips v-model="shownLength" class="compact" :options="lengths" label="How much of it" />
       <p v-if="spread" class="hint">{{ spread }}</p>
     </section>
 
