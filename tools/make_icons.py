@@ -1,19 +1,19 @@
 """Draws the app's icons into public/icons/. Needs Pillow: run it with any Python that has it.
 
 The icon is a caipirinha: a tumbler of pale lime drink with ice, a straw and a lime wheel
-on the rim, on the app's green.
+on the rim, on the app's deep teal.
     python tools/make_icons.py
 """
 import math
 import os
 from PIL import Image, ImageDraw
 
-GREEN = (20, 121, 90)
+GREEN = (15, 76, 76)   # the app's deep teal
 GLASS = (238, 248, 240)
 DRINK = (201, 230, 132)
 ICE = (247, 252, 244)
-STRAW = (255, 205, 64)
-RIND = (62, 150, 44)
+STRAW = (255, 194, 71)
+RIND = (50, 166, 106)
 FLESH = (226, 244, 170)
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "icons")
 

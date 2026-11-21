@@ -13,10 +13,12 @@ const TABS = [
 
 <template>
   <nav class="tabbar" aria-label="Main">
+    <div class="tabbar-inner">
     <router-link v-for="tab in TABS" :key="tab.id" :to="tab.to" class="tab" :class="{ on: route.meta.tab === tab.id }"
       :aria-current="route.meta.tab === tab.id ? 'page' : undefined">
       <Icon :name="tab.id" />
       <span>{{ tab.title }}</span>
     </router-link>
+    </div>
   </nav>
 </template>

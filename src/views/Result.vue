@@ -5,6 +5,7 @@ import { play } from '../lib/play.js';
 import { buildSession } from '../lib/session.js';
 import { shade } from '../store.js';
 import Icon from '../components/Icon.vue';
+import Toucan from '../components/art/Toucan.vue';
 
 const router = useRouter();
 const result = play.result;
@@ -12,6 +13,11 @@ onMounted(() => { if (!result) router.replace('/practice'); });
 
 const share = computed(() => (result && result.n ? result.ok / result.n : 0));
 // Each missed word once, however often it was missed.
+// What a Brazilian would say to that score.
+const cheer = computed(() => (share.value >= 0.9 ? { pt: 'Mandou bem!', en: 'You nailed it!' }
+  : share.value >= 0.7 ? { pt: 'Muito bem!', en: 'Very good!' }
+  : share.value >= 0.4 ? { pt: 'Quase lá!', en: 'Almost there!' }
+  : { pt: 'Vamos de novo?', en: 'Shall we go again?' }));
 const missed = computed(() => (result ? [...new Set(result.tries.filter((t) => !t.ok && t.id).map((t) => t.id))] : []));
 
 function start(ids) {
@@ -24,6 +30,10 @@ function start(ids) {
 
 <template>
   <div v-if="result" class="result">
+    <div class="cheer">
+      <Toucan />
+      <p class="bubble"><b lang="pt-BR">{{ cheer.pt }}</b><span>{{ cheer.en }}</span></p>
+    </div>
     <p class="result-set">{{ result.title }}</p>
     <p class="result-score" :style="{ '--shade': shade(share) }">
       <b>{{ Math.round(share * 100) }}%</b>

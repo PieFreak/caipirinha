@@ -1,10 +1,13 @@
 <script setup>
+import { watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import TabBar from './components/TabBar.vue';
 import { ui } from './store.js';
 
 const route = useRoute();
 const reload = () => window.location.reload();
+// A session and its result fill the screen: no tab bar, and no shape in the background.
+watchEffect(() => document.documentElement.classList.toggle('plain', !!route.meta.full));
 </script>
 
 <template>

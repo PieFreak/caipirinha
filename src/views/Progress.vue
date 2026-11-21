@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { state, dayKey, librarySize, shade } from '../store.js';
 import { modesTitle } from '../lib/session.js';
 import LineChart from '../components/LineChart.vue';
+import Toucan from '../components/art/Toucan.vue';
 
 const DAY = 86400000;
 const WINDOW = 30;
@@ -64,6 +65,10 @@ const kindsOf = (session) => session.modes || (session.mode && session.mode !== 
     </div>
   </header>
 
+  <div v-if="!totals.n && !librarySize" class="cheer">
+    <Toucan />
+    <p class="bubble"><b lang="pt-BR">Vamos começar?</b><span>Shall we start?</span></p>
+  </div>
   <p v-if="!totals.n && !librarySize" class="empty">Practise something and this fills in: how you did, day by day, and every session.</p>
 
   <template v-else>

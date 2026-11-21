@@ -28,6 +28,15 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
   found the voice "horrid" (2026-11-21), before the ranking. If the best device voice is still not good enough, the
   next step would be recorded audio made once with a free offline voice model and shipped with the app: not built,
   and it needs the owner's yes (a download of the model, and the app grows by several megabytes).
+- **The look** (the owner's brief "Tropical Modern", 2026-11-21, a guideline and not a rule book): warm cream
+  `#FFF8EE` as the ground, deep teal `#0F4C4C` for the main button and the Today header, tropical green `#32A66A`
+  for progress, sunshine yellow `#FFC247` sparingly (what is heard, a tick, the count), ocean blue `#3567E8` for
+  links and charts. Rounded cards with soft shadows; **almost no gradients** (the owner: "it looks ugly if
+  overdone"), so depth is shadow and a lighter or darker tone. Headings and Portuguese words are set in Fraunces
+  (open license, bundled); the rest is the device's own font. Drawings are the app's own SVG (`src/components/art/`):
+  the scene on Today and a toucan that speaks Portuguese on empty screens and at the end of a session. Used
+  selectively: no picture in a session. The brand line is written "Aprenda português. Viva o Brasil!" (a
+  language's name takes no capital in Portuguese). There is a dark theme in the same colors.
 - Not built, because they break the rules above: an AI conversation partner, reminders sent by the app.
 
 ## Where it lives

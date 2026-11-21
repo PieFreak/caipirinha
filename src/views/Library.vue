@@ -5,6 +5,7 @@ import { clean, stripAccents } from '../lib/text.js';
 import Chips from '../components/Chips.vue';
 import Icon from '../components/Icon.vue';
 import WordRow from '../components/WordRow.vue';
+import Toucan from '../components/art/Toucan.vue';
 
 const SORTS = [
   { id: 'recent', title: 'Newest' },
@@ -46,6 +47,10 @@ const visible = computed(() => ids.value.slice(0, shown.value));
     <router-link to="/add" class="btn small"><Icon name="plus" :size="18" /> Add a word</router-link>
   </header>
 
+  <div v-if="!librarySize" class="cheer">
+    <Toucan />
+    <p class="bubble"><b lang="pt-BR">Bora aprender!</b><span>Let's learn!</span></p>
+  </div>
   <p v-if="!librarySize" class="empty">
     Nothing here yet. Words join your library when you practise them, when they arrive as the day's new words,
     and when you add your own.

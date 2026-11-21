@@ -106,7 +106,7 @@ function start() {
 
     <section class="tight">
       <h2>How many</h2>
-      <Chips v-model="shownLength" :options="lengths" label="How many questions" />
+      <Chips v-model="shownLength" class="compact" :options="lengths" label="How many questions" />
       <p v-if="spread" class="hint">{{ spread }}</p>
     </section>
 

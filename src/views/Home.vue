@@ -8,6 +8,7 @@ import { shownEn } from '../lib/text.js';
 import Icon from '../components/Icon.vue';
 import SpeakButton from '../components/SpeakButton.vue';
 import SetRow from '../components/SetRow.vue';
+import HeroArt from '../components/art/HeroArt.vue';
 
 const router = useRouter();
 const nothingLeft = ref(false);
@@ -24,18 +25,27 @@ const source = computed({
 });
 const quick = computed(() => LIBRARY_SETS.filter((set) => set.id !== 'lib:own' && getSet(set.id).ids.length));
 
+// The greeting for the hour, as a Brazilian would give it.
+const hour = new Date().getHours();
+const hello = hour >= 5 && hour < 12 ? { pt: 'Bom dia!', en: 'Good morning' }
+  : hour >= 12 && hour < 18 ? { pt: 'Boa tarde!', en: 'Good afternoon' }
+  : { pt: 'Boa noite!', en: 'Good evening', night: true };
+
 function more() {
   if (!moreToday()) nothingLeft.value = true;
 }
 </script>
 
 <template>
-  <header class="top">
-    <div>
-      <h1>Caipirinha</h1>
-      <p class="sub">{{ librarySize }} {{ librarySize === 1 ? 'word' : 'words' }} in your library</p>
+  <header class="hero">
+    <HeroArt class="hero-art" :night="hello.night" />
+    <div class="hero-top">
+      <span class="wordmark">Caipirinha</span>
+      <router-link to="/settings" class="icon-btn" aria-label="Settings"><Icon name="settings" /></router-link>
     </div>
-    <router-link to="/settings" class="icon-btn" aria-label="Settings"><Icon name="settings" /></router-link>
+    <h1 class="hero-hello" lang="pt-BR" :title="hello.en">{{ hello.pt }}</h1>
+    <p class="hero-sub" lang="pt-BR">Aprenda português.<br>Viva o Brasil!</p>
+    <p class="hero-count"><b>{{ librarySize }}</b> {{ librarySize === 1 ? 'word' : 'words' }} in your library</p>
   </header>
 
   <section>
