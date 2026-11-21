@@ -18,6 +18,10 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - **Typos** in typed answers never fail outright: one letter off (two in a long answer) gives one chance to
   correct it, and a second try that is still a typo counts as right. Typing another real word ("ela" for "ele")
   is a mistake, not a typo.
+- **Adding a word** shows, at every letter typed, what the app already has that matches (`src/lib/search.js`):
+  the same word, then those that start with it, then those with a word that starts with it. The same word in the
+  library cannot be added again; one the app has but the library lacks joins with one tap. The meaning field does
+  the same for meanings. Accents and capitals do not hide a match, but "avó" and "avô" are two words.
 - **On a computer**, keys 1 to 4 pick a choice and Enter moves on.
 - **Kinds of exercise are ticked**, any number of the four, all of them by default (there is no "Mixed" choice).
   Each question is one of the ticked kinds that can ask it; the ticks are remembered.

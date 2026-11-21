@@ -276,6 +276,17 @@ section.tight { gap: 10px; }
 .form label i { font-weight: 400; color: var(--muted); font-style: normal; }
 .form small { font-weight: 400; color: var(--muted); font-size: 14px; }
 
+/* What the app already has, shown while a new word is typed. */
+.found { display: flex; flex-direction: column; gap: 6px; margin-top: -4px; }
+.found-head { font-size: 13px; font-weight: 700; color: var(--muted); }
+.found-head.same { color: var(--ink); }
+.found-row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 10px 8px 16px; }
+.found-row.same { background: var(--sun-soft); }
+.tag {
+  flex: none; padding: 5px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); font-size: 13px; font-weight: 650; text-decoration: none;
+}
+
 .confirm { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--bad-soft); border-radius: var(--radius-small); font-size: 15px; }
 
 /* ---- Portuguese and its meaning */
