@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { state, save, exportData, importData, resetAll, ensureDaily, librarySize } from '../store.js';
 import { speech, speak, chosenVoice } from '../lib/speech.js';
+import { isBrazilian, isRobotic } from '../lib/voices.js';
 import Chips from '../components/Chips.vue';
 import Icon from '../components/Icon.vue';
 
@@ -22,7 +23,10 @@ const voice = computed({
   get: () => chosenVoice()?.name || '',
   set: (value) => { settings.voice = value; save(); },
 });
-const brazilian = computed(() => speech.voices.some((v) => /^pt[-_]br$/i.test(v.lang)));
+const brazilian = computed(() => speech.voices.some(isBrazilian));
+const robotic = computed(() => { const v = chosenVoice(); return !!v && isRobotic(v); });
+const auto = computed(() => !speech.voices.some((v) => v.name === settings.voice));
+const voiceLabel = (v) => `${v.name}${isBrazilian(v) ? '' : ' (European Portuguese)'}${isRobotic(v) ? ' (synthesiser)' : ''}`;
 
 // ---- backup
 
@@ -100,15 +104,21 @@ function erase() {
     <p v-if="!speech.supported" class="hint bad">This browser cannot read text aloud, so listening is switched off.</p>
     <template v-else>
       <p v-if="!speech.voices.length" class="hint">
-        No Portuguese voice was found on this device. An iPhone has one built in; on other devices it may sound wrong.
+        No Portuguese voice was found on this device, so Portuguese is read by a voice made for another language and
+        sounds wrong. An iPhone has Brazilian voices built in.
       </p>
       <p v-else-if="!brazilian" class="hint">Only a European Portuguese voice was found on this device: it sounds different from Brazilian.</p>
       <label v-if="speech.voices.length" class="pick block">
         <span>Voice</span>
         <select v-model="voice">
-          <option v-for="v in speech.voices" :key="v.name" :value="v.name">{{ v.name }} ({{ v.lang }})</option>
+          <option v-for="v in speech.voices" :key="v.name" :value="v.name">{{ voiceLabel(v) }}</option>
         </select>
       </label>
+      <p v-if="speech.voices.length" class="hint" :class="{ bad: robotic }">
+        <template v-if="robotic">This one is a synthesiser and sounds mechanical. Pick another above if there is one.</template>
+        <template v-else-if="auto">The app picked the most natural voice it found; the list has the best first.</template>
+        <template v-else>Your own choice. The list has the most natural voices first.</template>
+      </p>
       <Chips v-model="rate" :options="RATES" label="Speed" />
       <button type="button" class="btn" @click="speak('Bom dia! Tudo bem com você?')">Hear the voice</button>
       <p class="hint">Tap a speaker twice to hear something slowly. On an iPhone, better voices can be downloaded for free

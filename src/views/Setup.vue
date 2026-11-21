@@ -39,18 +39,27 @@ const shownDir = computed({
   get: () => (onlyOrder.value ? 'en-pt' : dir.value),
   set: (value) => { dir.value = value; },
 });
+// A set of 12 words offers 5, 10 and All: a larger number would be All under another name.
+// Counting and clock times are made up without end, so there is no All for them.
+const lengths = computed(() => (set.value.kind === 'gen'
+  ? LENGTHS.filter((option) => option.id)
+  : LENGTHS.filter((option) => !option.id || option.id < set.value.ids.length)));
+const shownLength = computed({
+  get: () => (lengths.value.some((option) => option.id === length.value) ? length.value : set.value.kind === 'gen' ? 20 : 0),
+  set: (value) => { length.value = value; },
+});
 const shownWords = computed(() => (set.value.kind === 'list' ? set.value.ids.slice(0, 120) : []));
 const problem = ref('');
 
 function start() {
   Object.assign(state.settings, { modes: ticked.value.slice(), dir: dir.value, length: length.value });
   save();
-  const session = buildSession(props.id, { modes: chosen.value, dir: shownDir.value, length: length.value });
+  const session = buildSession(props.id, { modes: chosen.value, dir: shownDir.value, length: shownLength.value });
   if (!session) {
     problem.value = 'Nothing here fits the kinds of exercise you ticked. Tick another.';
     return;
   }
-  play.session = { ...session, length: length.value };
+  play.session = { ...session, length: shownLength.value };
   router.push('/play');
 }
 </script>
@@ -88,7 +97,7 @@ function start() {
 
     <section class="tight">
       <h2>How many</h2>
-      <Chips v-model="length" :options="LENGTHS" label="How many questions" />
+      <Chips v-model="shownLength" :options="lengths" label="How many questions" />
     </section>
 
     <p v-if="problem" class="hint bad">{{ problem }}</p>

@@ -30,7 +30,11 @@ export const DIRS = [
   { id: 'en-pt', title: 'English → Portuguese' },
 ];
 
-export const LENGTHS = [{ id: 10, title: '10' }, { id: 20, title: '20' }, { id: 0, title: 'All' }];
+// How many questions: 5 to 50 in fives, or (0) every word of the set.
+export const LENGTHS = [
+  ...[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((n) => ({ id: n, title: String(n) })),
+  { id: 0, title: 'All' },
+];
 
 const rand = (n) => Math.floor(Math.random() * n);
 

@@ -2,18 +2,15 @@
 // are on the phone. Nothing is recorded and nothing is sent anywhere.
 import { reactive } from 'vue';
 import { state } from '../store.js';
+import { portugueseVoices } from './voices.js';
 
 export const speech = reactive({
   supported: typeof window !== 'undefined' && 'speechSynthesis' in window,
-  voices: [],   // the Portuguese voices this phone has, Brazilian first
+  voices: [],   // the Portuguese voices this phone has, the most natural first (lib/voices.js)
 });
 
-const isBrazilian = (voice) => /^pt[-_]br$/i.test(voice.lang);
-
 function refresh() {
-  speech.voices = window.speechSynthesis.getVoices()
-    .filter((voice) => /^pt([-_]|$)/i.test(voice.lang))
-    .sort((a, b) => isBrazilian(b) - isBrazilian(a) || a.name.localeCompare(b.name));
+  speech.voices = portugueseVoices(window.speechSynthesis.getVoices());
 }
 
 export function initSpeech() {
@@ -32,6 +29,7 @@ export function initSpeech() {
   window.addEventListener('pointerdown', unlock, { once: true });
 }
 
+// The voice the learner picked in Settings, or else the best one the device has.
 export function chosenVoice() {
   return speech.voices.find((voice) => voice.name === state.settings.voice) || speech.voices[0] || null;
 }

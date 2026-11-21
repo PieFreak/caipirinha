@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { toWords, numberAnswers, formatNumber } from '../src/lib/numbers.js';
 import { timeWords, formatTime } from '../src/lib/clock.js';
 import { nextScore } from '../src/lib/score.js';
+import { isRobotic, portugueseVoices, voiceQuality } from '../src/lib/voices.js';
 import { checkPt, checkEn, checkDigits, distance, parseLines, idOf, tilesOf, cleanEn } from '../src/lib/text.js';
 
 test('numbers are written as Brazilians write them', () => {
@@ -137,6 +138,36 @@ test('how well a word is known: +10% for right, −15% for wrong', () => {
   // Many answers leave no rounding dust behind.
   assert.equal(after(null, '10'.repeat(20) + '1'.repeat(10)), 1);
   assert.equal(after(0.5, '1010'), 0.4);
+});
+
+test('the most natural voice a device has is the one used', () => {
+  // What an iPhone lists for Portuguese, in the order of the names.
+  const iphone = [
+    { name: 'Eddy (Portuguese (Brazil))', lang: 'pt-BR' }, { name: 'Flo (Portuguese (Brazil))', lang: 'pt-BR' },
+    { name: 'Grandma (Portuguese (Brazil))', lang: 'pt-BR' }, { name: 'Grandpa (Portuguese (Brazil))', lang: 'pt-BR' },
+    { name: 'Joana', lang: 'pt-PT' }, { name: 'Luciana', lang: 'pt-BR' }, { name: 'Reed (Portuguese (Brazil))', lang: 'pt-BR' },
+    { name: 'Rocko (Portuguese (Brazil))', lang: 'pt-BR' }, { name: 'Samantha', lang: 'en-US' },
+    { name: 'Sandy (Portuguese (Brazil))', lang: 'pt-BR' }, { name: 'Shelley (Portuguese (Brazil))', lang: 'pt-BR' },
+  ];
+  const ranked = portugueseVoices(iphone).map((voice) => voice.name);
+  assert.equal(ranked[0], 'Luciana', 'the natural voice, not the first by name');
+  assert.equal(ranked.length, 10, 'only Portuguese voices');
+  assert.ok(isRobotic({ name: ranked[1] }), 'then the Brazilian synthesisers');
+  assert.equal(ranked.at(-1), 'Joana', 'a European voice comes after every Brazilian one');
+
+  // A downloaded larger version wins over the small one.
+  const withDownloads = portugueseVoices([...iphone, { name: 'Luciana (Enhanced)', lang: 'pt-BR' }, { name: 'Felipe (Premium)', lang: 'pt-BR' }]);
+  assert.deepEqual(withDownloads.slice(0, 3).map((voice) => voice.name), ['Felipe (Premium)', 'Luciana (Enhanced)', 'Luciana']);
+
+  // Other devices: the neural and the browser's own voices before a synthesiser.
+  const desktop = portugueseVoices([
+    { name: 'eSpeak Portuguese (Brazil)', lang: 'pt-BR' }, { name: 'Google português do Brasil', lang: 'pt-BR' },
+    { name: 'Microsoft Francisca Online (Natural) - Portuguese (Brazil)', lang: 'pt-BR' }, { name: 'Microsoft Maria', lang: 'pt_BR' },
+  ]).map((voice) => voice.name);
+  assert.deepEqual(desktop, ['Microsoft Francisca Online (Natural) - Portuguese (Brazil)', 'Google português do Brasil',
+    'Microsoft Maria', 'eSpeak Portuguese (Brazil)']);
+  assert.ok(voiceQuality({ name: 'Luciana', lang: 'pt-BR' }) > voiceQuality({ name: 'Joana (Enhanced)', lang: 'pt-PT' }));
+  assert.deepEqual(portugueseVoices([{ name: 'Samantha', lang: 'en-US' }]), []);
 });
 
 test('a typed English answer', () => {
