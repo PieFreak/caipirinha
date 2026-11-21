@@ -91,6 +91,12 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - Commits here are made as `PieFreak <PieFreak@users.noreply.github.com>` (this repository's own git config),
   so no private e-mail address is published.
 
+## Versions
+
+Annotated git tags `vMAJOR.MINOR.PATCH` on `main`, pushed to GitHub. `v1.0.0` (2026-11-22, commit 66a6a44) is the
+first release, the one the owner installed. Never move or delete a pushed tag; a fix after a release is the next
+PATCH, something new the next MINOR.
+
 ## Commands
 
 - `npm run dev`: the app on http://localhost:5173 (no service worker in dev).
