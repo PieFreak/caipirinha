@@ -77,10 +77,12 @@ test('"I know this" puts a word at 100%, and on Today it brings another new word
   assert.equal(store.scoreOf(first), null, 'undone');
 });
 
-test('the daily review takes the weakest and the longest unseen, at most 20', () => {
+test('the daily review takes the weakest and the longest unseen, at most 20, none seen today', () => {
   store.resetAll();
   for (const id of ['olá', 'oi', 'bom dia', 'boa tarde']) store.record(id, true);
   store.record('oi', false);
+  assert.equal(store.getSet('lib:review').ids.length, 0, 'all practised today: nothing to review');
+  for (const id of ['olá', 'oi', 'bom dia', 'boa tarde']) store.state.words[id].last -= 2 * 86400000;
   const set = store.getSet('lib:review');
   assert.equal(set.ids[0], 'oi', 'the weakest first');
   assert.equal(set.ids.length, 4);

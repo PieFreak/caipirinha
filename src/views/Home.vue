@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  state, ensureDaily, moreToday, knowToday, getItem, getSet, librarySize, save, sourceChoices, LIBRARY_SETS,
+  state, ensureDaily, moreToday, knowToday, getItem, getSet, librarySize, save, scoreOf, sourceChoices, LIBRARY_SETS,
 } from '../store.js';
 import { buildSession, modesFor } from '../lib/session.js';
 import { dropSession, keptSession, startSession } from '../lib/play.js';
@@ -70,36 +70,40 @@ function startReview() {
   startSession({ ...session, length: 0 });
   router.push('/play');
 }
+
+// What the header offers: the one thing to do next. An unfinished session first, then the
+// daily review, then today's new words; when all of that is done, more practice.
+const fresh = computed(() => state.daily.ids.filter((id) => getItem(id) && scoreOf(id) == null).length);
+const next = computed(() => {
+  if (kept.value) {
+    const { session, index, queue } = kept.value;
+    return { line: `Continue ${session.title}: ${index} of ${queue.length} done`, action: 'Continue', run: continueKept, kept: true };
+  }
+  const review = reviewSet.value.ids.length;
+  if (review) return { line: `Next up: daily review, ${review} ${review === 1 ? 'word' : 'words'}`, action: 'Start review', run: startReview };
+  if (fresh.value) {
+    return { line: `Next up: today's ${fresh.value} new ${fresh.value === 1 ? 'word' : 'words'}`, action: 'Practise them',
+      run: () => router.push({ name: 'set', params: { id: 'today' } }) };
+  }
+  return { line: 'All done for today. Muito bem!', action: 'Practise more', run: () => router.push('/practice') };
+});
 </script>
 
 <template>
   <header class="hero">
-    <HeroArt class="hero-art" :night="hello.night" />
+    <HeroArt class="hero-art" />
     <div class="hero-top">
       <span class="wordmark">Caipirinha</span>
       <router-link to="/settings" class="icon-btn" aria-label="Settings"><Icon name="settings" /></router-link>
     </div>
-    <h1 class="hero-hello" lang="pt-BR" :title="hello.en">{{ hello.pt }}</h1>
-    <p class="hero-sub" lang="pt-BR">Aprenda português.<br>Viva o Brasil!</p>
-    <p class="hero-count"><b>{{ librarySize }}</b> {{ librarySize === 1 ? 'word' : 'words' }} in your library</p>
+    <h1 class="hero-hello" lang="pt-BR">{{ hello.pt }}</h1>
+    <p class="hero-sub">{{ hello.en }} · {{ librarySize }} {{ librarySize === 1 ? 'word' : 'words' }} in your library</p>
+    <p class="hero-next">{{ next.line }}</p>
+    <div class="hero-actions">
+      <button type="button" class="btn primary" @click="next.run">{{ next.action }}</button>
+      <button v-if="next.kept" type="button" class="link" @click="dropKept">Start fresh</button>
+    </div>
   </header>
-
-  <section v-if="kept" class="card-row">
-    <div class="card-text">
-      <p class="card-title">Continue where you left off</p>
-      <p class="hint">{{ kept.session.title }} · {{ kept.index }} of {{ kept.queue.length }} done</p>
-    </div>
-    <button type="button" class="btn primary small" @click="continueKept">Continue</button>
-    <button type="button" class="icon-btn" aria-label="Let the unfinished session go" @click="dropKept"><Icon name="close" :size="20" /></button>
-  </section>
-
-  <section v-if="reviewSet.ids.length" class="card-row review">
-    <div class="card-text">
-      <p class="card-title">Daily review</p>
-      <p class="hint">{{ reviewSet.ids.length }} {{ reviewSet.ids.length === 1 ? 'word' : 'words' }}: your weakest, and those you haven't seen for longest</p>
-    </div>
-    <button type="button" class="btn primary small" @click="startReview">Start</button>
-  </section>
 
   <section>
     <div class="section-head">

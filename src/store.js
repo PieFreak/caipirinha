@@ -401,9 +401,11 @@ const weakest = () => libraryIds()
 const longestAgo = () => libraryIds().sort((a, b) => lastSeen(a) - lastSeen(b));
 
 // The daily review: the weakest words and those not seen for longest, in turn, up to 20.
+// A word practised today is not in it, so once the review is done it is done for the day.
 export const REVIEW_SIZE = 20;
 function review() {
-  const words = practised();
+  const today = dayKey();
+  const words = practised().filter((id) => dayKey(new Date(lastSeen(id))) !== today);
   const weak = words.filter((id) => scoreOf(id) < 0.9).sort((a, b) => scoreOf(a) - scoreOf(b));
   const old = words.slice().sort((a, b) => lastSeen(a) - lastSeen(b));
   const picked = [];

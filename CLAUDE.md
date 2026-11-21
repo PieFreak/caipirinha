@@ -56,7 +56,11 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - **Scores fade** by 1% for each whole day since a word was last practised (`faded` in `src/lib/score.js`, the
   owner's number); an answer counts from the faded score. "I know this" puts a word at 100% (on Today it also
   brings another new word, with Undo).
-- **Daily review** on Today: up to 20 words, the weakest and the longest unseen in turn, started in one tap.
+- **Today's header** (the owner chose design "1 · Lime" of four, 2026-11-22, after finding the dark teal header
+  too strong and "a bit messy"): pale lime ground, palm leaves and a lime slice on the right, the greeting, the
+  library count, and the one thing to do next with its button: continue an unfinished session (with "Start
+  fresh"), else the daily review, else today's new words, else "All done for today".
+- **Daily review**: up to 20 words, the weakest and the longest unseen in turn, none practised today.
 - **Flashcards** (Setup › Flashcards, `src/views/Cards.vue`): flip through a set; nothing is judged or recorded
   (the owner: "it won't be correct or anything").
 - **Verbs** (`src/lib/verbs.js`): present and past (pretérito perfeito), four Brazilian forms (eu; você/ele/ela/a
