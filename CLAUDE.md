@@ -15,6 +15,13 @@ The name is the owner's choice (2026-11-21); the GitHub repository is named the 
 - **Spoken Brazilian is a side note**, never a section of its own: a word's note says "Spoken: …".
 - Not built, because they break the rules above: an AI conversation partner, reminders sent by the app.
 
+## Where it lives
+
+- Repository: `github.com/PieFreak/caipirinha` (public; the free plan publishes only public repositories).
+- Published by `.github/workflows/deploy.yml` at every push to `main`, to https://piefreak.github.io/caipirinha/.
+- Commits here are made as `PieFreak <PieFreak@users.noreply.github.com>` (this repository's own git config),
+  so no private e-mail address is published.
+
 ## Commands
 
 - `npm run dev`: the app on http://localhost:5173 (no service worker in dev).
